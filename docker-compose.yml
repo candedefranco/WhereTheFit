@@ -5,8 +5,8 @@ services:
     image: postgres:16
     container_name: wtf-postgres
     environment:
-      POSTGRES_USER: $(db_username)
-      POSTGRES_PASSWORD: $(db_password)
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: victor123
       POSTGRES_DB: wtf_db
     ports:
       - "5432:5432"
