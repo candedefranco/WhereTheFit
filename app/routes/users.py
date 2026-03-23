@@ -30,9 +30,9 @@ def create_user():
     user = User(
         username=data["username"],
         email=data["email"],
-        password=data["password"],
         profile_picture=data.get("profile_picture"), #opcional
     )
+    user.set_password(data["password"])
     # agrego el usuario a la sesion y lo guardo en la base de datos
     db.session.add(user)
     db.session.commit()
@@ -84,7 +84,7 @@ def update_user(user_id):
         user.email = data["email"]
 
     if "password" in data:
-        user.password = data["password"]
+        user.set_password(data["password"])
 
     if "profile_picture" in data:
         user.profile_picture = data["profile_picture"]
