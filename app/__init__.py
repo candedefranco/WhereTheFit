@@ -2,6 +2,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from dotenv import load_dotenv
+from flask_cors import CORS
 import os
 
 # carga las variables del archivo .env (como la URL de la base de datos)
@@ -30,14 +31,18 @@ def create_app():
 
     # conecto SQLAlchemy y Bcrypt con nuestra app de Flask
     db.init_app(app)
+    CORS(app, supports_credentials=True, origins=["http://localhost:5173", "http://127.0.0.1:5173"])
     bcrypt.init_app(app)
 
     # registro las rutas de usuarios (los endpoints de /users)
     from app.routes.users import users_bp
     # registro las rutas de autenticacion (login/logout)
     from app.routes.auth import auth_bp
+    # registro las rutas de las paginas HTML
+    from app.routes.views import views_bp
     app.register_blueprint(users_bp)
     app.register_blueprint(auth_bp)
+    app.register_blueprint(views_bp)
 
     # creo las tablas en la base de datos si todavia no existen
     with app.app_context():

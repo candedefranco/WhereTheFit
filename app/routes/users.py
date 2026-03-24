@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, session
 from app import db
 from app.models import User
 
@@ -16,15 +16,15 @@ def create_user():
     # veriico que estén todos los campos obligatorios
     required = ["username", "email", "password"]
     if not all(field in data for field in required):
-        return jsonify({"error": "Missing required fields"}), 400
+        return jsonify({"error": "Faltan campos obligatorios"}), 400
 
     # verifico que el username no este en uso
     if User.query.filter_by(username=data["username"]).first():
-        return jsonify({"error": "Username already taken"}), 400
+        return jsonify({"error": "El nombre de usuario ya esta en uso"}), 400
 
     # lo mismo con el mail
     if User.query.filter_by(email=data["email"]).first():
-        return jsonify({"error": "Email already registered"}), 400
+        return jsonify({"error": "El email ya está registrado"}), 400
 
     # creo el objeto User con los datos recibidos
     user = User(
@@ -58,7 +58,7 @@ def get_user(user_id):
     user = db.session.get(User, user_id)
     # si no existe, devuelvo error 404
     if not user:
-        return jsonify({"error": "User not found"}), 404
+        return jsonify({"error": "Usuario no encontrado"}), 404
     return jsonify(user.to_dict()), 200
 
 # PUT /users/<id> → actualiza un usuario existente
@@ -67,20 +67,22 @@ def update_user(user_id):
     # busco el usuario por ID
     user = db.session.get(User, user_id)
     if not user:
-        return jsonify({"error": "User not found"}), 404
+        return jsonify({"error": "Usuario no encontrado"}), 404
 
     data = request.get_json()
 
     # actualizo solo los campos que vinieron en el body
     # si no viene un campo, lo dejo como estaba
     if "username" in data:
-        if User.query.filter_by(username=data["username"]).first():
-            return jsonify({"error": "Username already taken"}), 400
+        existing = User.query.filter_by(username=data["username"]).first()
+        if existing and existing.id != user_id:
+            return jsonify({"error": "El nombre de usuario ya esta en uso"}), 400
         user.username = data["username"]
 
     if "email" in data:
-        if User.query.filter_by(email=data["email"]).first():
-            return jsonify({"error": "Email already registered"}), 400
+        existing = User.query.filter_by(email=data["email"]).first()
+        if existing and existing.id != user_id:
+            return jsonify({"error": "El email ya esta registrado"}), 400
         user.email = data["email"]
 
     if "password" in data:
@@ -89,6 +91,12 @@ def update_user(user_id):
     if "profile_picture" in data:
         user.profile_picture = data["profile_picture"]
 
+    if "user_id" not in session:
+        return jsonify({"error": "Tenés que estar logueado"}), 401
+
+    if session["user_id"] != user_id:
+        return jsonify({"error": "No podés editar el perfil de otro usuario"}), 403
+
     # guardo los cambios en la base de datos
     db.session.commit()
     return jsonify(user.to_dict()), 200
@@ -96,14 +104,22 @@ def update_user(user_id):
 # DELETE /users/<id> → borra un usuario por su ID
 @users_bp.route("/<int:user_id>", methods=["DELETE"])
 def delete_user(user_id):
+    # verifico que haya sesion activa
+    if "user_id" not in session:
+        return jsonify({"error": "Tenés que estar logueado"}), 401
+
+    # verifico que solo pueda borrar su propia cuenta
+    if session["user_id"] != user_id:
+        return jsonify({"error": "No podés borrar el perfil de otro usuario"}), 403
     # busca el usuario por ID
     user = db.session.get(User, user_id)
+
     if not user:
-        return jsonify({"error": "User not found"}), 404
+        return jsonify({"error": "Usuario no encontrado"}), 404
 
     # se borra el usuario y se guarda el cambio
     db.session.delete(user)
     db.session.commit()
 
     # devuelve un mensaje confirmando el delete
-    return jsonify({"message": f"User {user_id} deleted"}), 200
+    return jsonify({"message": f"Usuario {user_id} eliminado"}), 200

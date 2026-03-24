@@ -1,0 +1,211 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background-color: #f0f2f5;
+    color: #333;
+}
+
+/* navbar */
+.navbar {
+    background-color: #4a9ba8;
+    padding: 0 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+
+.navbar-logo {
+    color: white;
+    font-size: 20px;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.navbar-links {
+    display: flex;
+    gap: 24px;
+}
+
+.navbar-links a {
+    color: white;
+    text-decoration: none;
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.navbar-links a:hover {
+    opacity: 1;
+}
+
+/* contenido principal */
+.container {
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.card {
+    background-color: white;
+    border-radius: 8px;
+    padding: 32px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+h2 {
+    font-size: 20px;
+    margin-bottom: 24px;
+    color: #222;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+/* formularios */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-width: 420px;
+}
+
+input {
+    padding: 10px 14px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    background-color: #fafafa;
+}
+
+input:focus {
+    outline: none;
+    border-color: #4a9ba8;
+    background-color: white;
+}
+
+/* botones */
+.btn {
+    display: inline-block;
+    padding: 9px 18px;
+    background-color: #4a9ba8;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.btn:hover {
+    background-color: #3d8a97;
+}
+
+.btn-secondary {
+    background-color: #888;
+}
+
+.btn-secondary:hover {
+    background-color: #666;
+}
+
+.btn-danger {
+    background-color: #e74c3c;
+}
+
+.btn-danger:hover {
+    background-color: #c0392b;
+}
+
+.btn-small {
+    padding: 5px 10px;
+    font-size: 12px;
+}
+
+/* tabla */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+th {
+    text-align: left;
+    padding: 10px 14px;
+    background-color: #f7f7f7;
+    border-bottom: 2px solid #eee;
+    color: #555;
+    font-weight: 600;
+}
+
+td {
+    padding: 12px 14px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+tr:hover td {
+    background-color: #fafafa;
+}
+
+/* login centrado */
+.login-wrapper {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f0f2f5;
+}
+
+.login-card {
+    background: white;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 380px;
+}
+
+.login-card h1 {
+    color: #4a9ba8;
+    font-size: 28px;
+    margin-bottom: 8px;
+}
+
+.login-card p {
+    color: #888;
+    font-size: 13px;
+    margin-bottom: 24px;
+}
+
+/* errores y links */
+.error {
+    color: #e74c3c;
+    font-size: 13px;
+    margin-top: 8px;
+}
+
+a {
+    color: #4a9ba8;
+}
+
+.form-footer {
+    margin-top: 16px;
+    font-size: 13px;
+    color: #888;
+}
+
+.btn-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 4px;
+}
