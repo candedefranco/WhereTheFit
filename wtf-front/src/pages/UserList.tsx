@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
+import Layout from "../components/Layout"
 
 // defino el tipo User para TypeScript
 interface User {
@@ -18,6 +19,13 @@ function UserList() {
   // traigo el usuario logueado del localStorage
   const currentUser = JSON.parse(localStorage.getItem("user") || "null")
 
+  // traigo todos los usuarios de la base de datos
+  async function loadUsers() {
+    const response = await fetch("http://localhost:5001/users")
+    const data = await response.json()
+    setUsers(data)
+  }
+
   // si no hay sesion, mando al login
   useEffect(() => {
     if (!currentUser) {
@@ -26,12 +34,6 @@ function UserList() {
       loadUsers()
     }
   }, [])
-
-  async function loadUsers() {
-    const response = await fetch("http://localhost:5001/users")
-    const data = await response.json()
-    setUsers(data)
-  }
 
   async function deleteUser(id: number) {
     if (!confirm("¿Segura que querés borrar este usuario?")) return
@@ -49,28 +51,8 @@ function UserList() {
     }
   }
 
-  async function handleLogout() {
-    await fetch("http://localhost:5001/auth/logout", {
-      method: "POST",
-      credentials: "include",
-    })
-    localStorage.removeItem("user")
-    navigate("/login")
-  }
-
   return (
-    <>
-      <nav className="navbar">
-        <a href="/" className="navbar-logo">WhereTheFit</a>
-        <div className="navbar-links">
-          <a href="#">Buscar</a>
-          <a href="#">Feed</a>
-          <a href="/create">Crear</a>
-          <a href="/profile">Perfil</a>
-          <button onClick={handleLogout} className="btn btn-small">Cerrar sesión</button>
-        </div>
-      </nav>
-
+    <Layout>
       <div className="container">
         <div className="card">
           <div className="page-header">
@@ -99,6 +81,7 @@ function UserList() {
                     <td>{user.email}</td>
                     <td>{new Date(user.created_at).toLocaleDateString("es-AR")}</td>
                     <td>
+                      {/* solo muestro los botones en la fila del usuario logueado */}
                       {currentUser && currentUser.id === user.id && (
                         <div className="btn-row">
                           <a href={`/edit/${user.id}`} className="btn btn-small">Editar</a>
@@ -115,7 +98,7 @@ function UserList() {
           {error && <p className="error">{error}</p>}
         </div>
       </div>
-    </>
+    </Layout>
   )
 }
 

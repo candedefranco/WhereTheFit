@@ -38,37 +38,58 @@ function Login() {
   }
 
   return (
-    <div className="login-wrapper">
-      <div className="login-card">
-        <h1>WhereTheFit</h1>
-        <p>Iniciá sesión para continuar</p>
+      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+        {/* navbar sin boton de logout */}
+        <nav className="navbar">
+          <a href="/" className="navbar-logo">
+            📍 <span>WhereTheFit</span>
+          </a>
+          <div className="navbar-links">
+            <a href="#">Feed</a>
+            <a href="/create">Crear</a>
+            <a href="/profile">Perfil</a>
+          </div>
+        </nav>
 
-        <form onSubmit={handleSubmit}>
-          <input
-            type="email"
-            placeholder="Correo electrónico"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-          <input
-            type="password"
-            placeholder="Contraseña"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-          <button type="submit" className="btn">Iniciar sesión</button>
-        </form>
+        {/* formulario centrado */}
+        <div className="login-wrapper">
+          <div className="login-card">
+            <div className="login-logo">
+              <span className="login-logo-icon">📍</span>
+              WhereTheFit
+            </div>
 
-        {error && <p className="error">{error}</p>}
+            <form onSubmit={handleSubmit}>
+              <input
+                type="email"
+                placeholder="Correo electrónico"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+              <input
+                type="password"
+                placeholder="Contraseña"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <button type="submit" className="btn">Iniciar Sesión</button>
+              <a href="/create" className="btn btn-outline" style={{ marginTop: "8px" }}>
+                Registrarse
+              </a>
+            </form>
 
-        <div className="form-footer">
-          ¿No tenés cuenta? <a href="/create">Registrate</a>
+            {error && <p className="error">{error}</p>}
+          </div>
         </div>
+
+        {/* footer */}
+        <footer className="footer">
+          © 2026 WhereTheFit. Todos los derechos reservados.
+        </footer>
       </div>
-    </div>
-  )
+    )
 }
 
 export default Login

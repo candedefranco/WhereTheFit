@@ -39,10 +39,8 @@ def create_app():
     # registro las rutas de autenticacion (login/logout)
     from app.routes.auth import auth_bp
     # registro las rutas de las paginas HTML
-    from app.routes.views import views_bp
     app.register_blueprint(users_bp)
     app.register_blueprint(auth_bp)
-    app.register_blueprint(views_bp)
 
     # creo las tablas en la base de datos si todavia no existen
     with app.app_context():
