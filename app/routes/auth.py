@@ -24,7 +24,7 @@ def login():
     # guardo el ID del usuario en la sesion
     session["user_id"] = user.id
 
-    return jsonify({"message": "Login exitoso", "user": user.to_dict()}), 200
+    return jsonify({"message": "Login exitoso", "user": user.to_dict(), "token": "some"}), 200
 
 
 # POST /auth/logout → cierra la sesion
