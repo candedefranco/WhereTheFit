@@ -26,7 +26,7 @@ function Layout({ children, showLogout = true }: LayoutProps) {
       {/* navbar con logo y links */}
       <nav className="navbar">
         <a href="/" className="navbar-logo">
-          📍 <span>WhereTheFit</span>
+            <img src="/logo-wtf.svg" alt="WhereTheFit logo" width={45} height={40} /> <span>WhereTheFit</span>
         </a>
         <div className="navbar-links">
           <a href="/feed">Feed</a>

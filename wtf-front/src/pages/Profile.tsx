@@ -1,5 +1,7 @@
 import { useNavigate } from "react-router-dom"
 import { useEffect } from "react"
+import Layout from "../components/Layout"
+
 
 function Profile() {
   const navigate = useNavigate()
@@ -14,30 +16,10 @@ function Profile() {
     }
   }, [])
 
-  async function handleLogout() {
-    await fetch("http://localhost:5001/auth/logout", {
-      method: "POST",
-      credentials: "include",
-    })
-    localStorage.removeItem("user")
-    navigate("/login")
-  }
-
   if (!currentUser) return null
 
   return (
-    <>
-      <nav className="navbar">
-        <a href="/" className="navbar-logo">WhereTheFit</a>
-        <div className="navbar-links">
-          <a href="#">Buscar</a>
-          <a href="#">Feed</a>
-          <a href="/create">Crear</a>
-          <a href="/profile">Perfil</a>
-          <button onClick={handleLogout} className="btn btn-small">Cerrar sesión</button>
-        </div>
-      </nav>
-
+    <Layout>
       <div className="container">
         <div className="card">
           <div className="page-header">
@@ -52,7 +34,7 @@ function Profile() {
           </div>
         </div>
       </div>
-    </>
+    </Layout>
   )
 }
 

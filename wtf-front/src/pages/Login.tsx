@@ -39,12 +39,12 @@ async function handleSubmit(e: React.FormEvent) {
     }
   }
 
-  return (
+ return (
       <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
         {/* navbar sin boton de logout */}
         <nav className="navbar">
           <a href="/" className="navbar-logo">
-            📍 <span>WhereTheFit</span>
+            <img src="/logo-wtf.svg" alt="WhereTheFit logo" width={45} height={40} /> <span>WhereTheFit</span>
           </a>
           <div className="navbar-links">
             <a href="#">Feed</a>
@@ -56,9 +56,20 @@ async function handleSubmit(e: React.FormEvent) {
         {/* formulario centrado */}
         <div className="login-wrapper">
           <div className="login-card">
-            <div className="login-logo">
-              <span className="login-logo-icon">📍</span>
-              WhereTheFit
+            {/* flexbox para centrar y apilar el logo y el texto */}
+            <div
+              className="login-logo"
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "4px"
+              }}
+            >
+              <span className="login-logo-icon">
+                <img src="/logo-wtf.svg" alt="WhereTheFit logo" width={45} height={40}/>
+              </span>
+              <span>WhereTheFit</span>
             </div>
 
             <form onSubmit={handleSubmit}>
