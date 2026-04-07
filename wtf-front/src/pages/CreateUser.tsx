@@ -44,7 +44,7 @@ function CreateUser() {
         <div className="navbar-links">
           <a href="#">Buscar</a>
           <a href="#">Feed</a>
-          <a href="/create">Crear</a>
+          <a href="#">Publicar</a>
           <a href="/profile">Perfil</a>
         </div>
       </nav>

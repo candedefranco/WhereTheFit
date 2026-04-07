@@ -1,4 +1,5 @@
-from flask import Blueprint, request, jsonify, session
+from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from app import db
 from app.models import User
 
@@ -13,26 +14,27 @@ def create_user():
     # leo el JSON que mando el cliente en el body de la request
     data = request.get_json()
 
-    # veriico que estén todos los campos obligatorios
+    # verifico que esten todos los campos obligatorios
     required = ["username", "email", "password"]
     if not all(field in data for field in required):
         return jsonify({"error": "Faltan campos obligatorios"}), 400
 
     # verifico que el username no este en uso
     if User.query.filter_by(username=data["username"]).first():
-        return jsonify({"error": "El nombre de usuario ya esta en uso"}), 400
+        return jsonify({"error": "El username ya esta en uso"}), 400
 
     # lo mismo con el mail
     if User.query.filter_by(email=data["email"]).first():
-        return jsonify({"error": "El email ya está registrado"}), 400
+        return jsonify({"error": "El email ya esta registrado"}), 400
 
     # creo el objeto User con los datos recibidos
     user = User(
         username=data["username"],
         email=data["email"],
-        profile_picture=data.get("profile_picture"), #opcional
+        profile_picture=data.get("profile_picture"),  # opcional
     )
     user.set_password(data["password"])
+
     # agrego el usuario a la sesion y lo guardo en la base de datos
     db.session.add(user)
     db.session.commit()
@@ -54,16 +56,24 @@ def get_users():
 # GET /users/<id> → devuelve un usuario especifico por su ID
 @users_bp.route("/<int:user_id>", methods=["GET"])
 def get_user(user_id):
-    # Buscamos el usuario por ID
+    # busco el usuario por ID
     user = db.session.get(User, user_id)
-    # si no existe, devuelvo error 404
     if not user:
         return jsonify({"error": "Usuario no encontrado"}), 404
     return jsonify(user.to_dict()), 200
 
+
 # PUT /users/<id> → actualiza un usuario existente
 @users_bp.route("/<int:user_id>", methods=["PUT"])
+@jwt_required()
 def update_user(user_id):
+    # obtengo el ID del usuario del token JWT
+    current_user_id = int(get_jwt_identity())
+
+    # verifico que el usuario solo pueda editar su propio perfil
+    if current_user_id != user_id:
+        return jsonify({"error": "No podés editar el perfil de otro usuario"}), 403
+
     # busco el usuario por ID
     user = db.session.get(User, user_id)
     if not user:
@@ -76,7 +86,7 @@ def update_user(user_id):
     if "username" in data:
         existing = User.query.filter_by(username=data["username"]).first()
         if existing and existing.id != user_id:
-            return jsonify({"error": "El nombre de usuario ya esta en uso"}), 400
+            return jsonify({"error": "El username ya esta en uso"}), 400
         user.username = data["username"]
 
     if "email" in data:
@@ -86,40 +96,36 @@ def update_user(user_id):
         user.email = data["email"]
 
     if "password" in data:
+        # hasheo la nueva contraseña antes de guardarla
         user.set_password(data["password"])
 
     if "profile_picture" in data:
         user.profile_picture = data["profile_picture"]
 
-    if "user_id" not in session:
-        return jsonify({"error": "Tenés que estar logueado"}), 401
-
-    if session["user_id"] != user_id:
-        return jsonify({"error": "No podés editar el perfil de otro usuario"}), 403
-
     # guardo los cambios en la base de datos
     db.session.commit()
     return jsonify(user.to_dict()), 200
 
+
 # DELETE /users/<id> → borra un usuario por su ID
 @users_bp.route("/<int:user_id>", methods=["DELETE"])
+@jwt_required()
 def delete_user(user_id):
-    # verifico que haya sesion activa
-    if "user_id" not in session:
-        return jsonify({"error": "Tenés que estar logueado"}), 401
+    # obtengo el ID del usuario del token JWT
+    current_user_id = int(get_jwt_identity())
 
     # verifico que solo pueda borrar su propia cuenta
-    if session["user_id"] != user_id:
+    if current_user_id != user_id:
         return jsonify({"error": "No podés borrar el perfil de otro usuario"}), 403
-    # busca el usuario por ID
-    user = db.session.get(User, user_id)
 
+    # busco el usuario por ID
+    user = db.session.get(User, user_id)
     if not user:
         return jsonify({"error": "Usuario no encontrado"}), 404
 
-    # se borra el usuario y se guarda el cambio
+    # borro el usuario y guardo el cambio
     db.session.delete(user)
     db.session.commit()
 
-    # devuelve un mensaje confirmando el delete
+    # devuelvo un mensaje confirmando el delete
     return jsonify({"message": f"Usuario {user_id} eliminado"}), 200

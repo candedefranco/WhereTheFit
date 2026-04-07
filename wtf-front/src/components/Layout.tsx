@@ -1,4 +1,6 @@
 import { useNavigate } from "react-router-dom"
+import { apiFetch } from "../api"
+
 
 // defino los props que recibe el componente
 interface LayoutProps {
@@ -13,11 +15,9 @@ function Layout({ children, showLogout = true }: LayoutProps) {
 
   // cierro la sesion y mando al login
   async function handleLogout() {
-    await fetch("http://localhost:5001/auth/logout", {
-      method: "POST",
-      credentials: "include",
-    })
+    await apiFetch("/auth/logout", { method: "POST" }) // CAMBIO: uso apiFetch en vez de fetch directo
     localStorage.removeItem("user")
+    localStorage.removeItem("token") // CAMBIO: borro el token tambien
     navigate("/login")
   }
 
@@ -29,8 +29,8 @@ function Layout({ children, showLogout = true }: LayoutProps) {
           📍 <span>WhereTheFit</span>
         </a>
         <div className="navbar-links">
-          <a href="#">Feed</a>
-          <a href="/create">Crear</a>
+          <a href="/feed">Feed</a>
+          <a href="/feed/create">Publicar</a>
           <a href="/profile">Perfil</a>
           {/* solo muestro el boton si showLogout es true */}
           {showLogout && (

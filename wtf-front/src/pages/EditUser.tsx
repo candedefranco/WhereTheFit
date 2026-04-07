@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { useNavigate, useParams } from "react-router-dom"
+import { apiFetch } from "../api"
 
 function EditUser() {
   const [username, setUsername] = useState("")
@@ -14,6 +15,15 @@ function EditUser() {
 
   const currentUser = JSON.parse(localStorage.getItem("user") || "null")
 
+async function loadUser() {
+    const response = await apiFetch(`/users/${id}`)
+    const data = await response.json()
+    // relleno el formulario con datos actuales
+    setUsername(data.username)
+    setEmail(data.email)
+    setProfilePicture(data.profile_picture || "")
+  }
+
   // si no hay sesion, mando al login
   useEffect(() => {
     if (!currentUser) {
@@ -23,16 +33,6 @@ function EditUser() {
     loadUser()
   }, [])
 
-  async function loadUser() {
-    const response = await fetch(`http://localhost:5001/users/${id}`)
-    const data = await response.json()
-
-    // relleno el formulario con los datos actuales
-    setUsername(data.username)
-    setEmail(data.email)
-    setProfilePicture(data.profile_picture || "")
-  }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError("")
@@ -41,10 +41,8 @@ function EditUser() {
     if (password) body.password = password
     if (profilePicture) body.profile_picture = profilePicture
 
-    const response = await fetch(`http://localhost:5001/users/${id}`, {
+    const response = await apiFetch(`/users/${id}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
       body: JSON.stringify(body),
     })
 

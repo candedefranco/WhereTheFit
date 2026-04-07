@@ -284,3 +284,134 @@ a {
   border-bottom: 1px solid #f0f0f0;
   font-size: 15px;
 }
+
+textarea {
+  padding: 12px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  background-color: white;
+  font-family: 'Inter', Arial, sans-serif;
+  resize: vertical;
+}
+
+textarea:focus {
+  outline: none;
+  border-color: #6a9ea8;
+}
+
+textarea::placeholder {
+  color: #aaa;
+}
+
+select {
+  padding: 12px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  background-color: white;
+  font-family: 'Inter', Arial, sans-serif;
+  color: #333;
+}
+
+select:focus {
+  outline: none;
+  border-color: #6a9ea8;
+}
+
+/* cards de posts */
+.post-card {
+  margin-bottom: 16px;
+}
+
+.post-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.post-meta {
+  color: #888;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.post-category {
+  color: #6a9ea8;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.post-description {
+  color: #444;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.post-image {
+  width: 100%;
+  max-height: 300px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+/* badge de estado */
+.status-badge {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: 500;
+}
+
+.status-badge.active {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.status-badge.resolved {
+  background-color: #e3f2fd;
+  color: #1565c0;
+}
+
+/* comentarios */
+.comment {
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.comment:last-child {
+  border-bottom: none;
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.comment-username {
+  font-weight: 600;
+  font-size: 13px;
+  color: #333;
+}
+
+.comment-date {
+  font-size: 12px;
+  color: #aaa;
+}
+
+.comment-text {
+  font-size: 14px;
+  color: #444;
+  line-height: 1.5;
+}
+
+.comment-link {
+  font-size: 13px;
+  color: #6a9ea8;
+  display: block;
+  margin-top: 4px;
+}

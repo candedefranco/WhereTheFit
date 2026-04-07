@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import Layout from "../components/Layout"
+import { apiFetch } from "../api"
 
 // defino el tipo User para TypeScript
 interface User {
@@ -35,17 +36,22 @@ function UserList() {
     }
   }, [])
 
-  async function deleteUser(id: number) {
+async function deleteUser(id: number) {
     if (!confirm("¿Segura que querés borrar este usuario?")) return
 
-    const response = await fetch(`http://localhost:5001/users/${id}`, {
+    const response = await apiFetch(`/users/${id}`, {
       method: "DELETE",
-      credentials: "include",
     })
 
     if (response.ok) {
-      // recargo la lista despues de borrar
-      loadUsers()
+      // si el usuario borrado es el logueado, limpio el localStorage y mando al login
+      if (currentUser && currentUser.id === id) {
+        localStorage.removeItem("user")
+        localStorage.removeItem("token")
+        navigate("/login")
+      } else {
+        loadUsers()
+      }
     } else {
       setError("Error al borrar el usuario")
     }

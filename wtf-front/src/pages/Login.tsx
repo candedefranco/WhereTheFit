@@ -1,5 +1,5 @@
-import { useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { useState, useEffect } from "react"
 
 function Login() {
   // estados para guardar lo que escribe el usuario
@@ -10,27 +10,29 @@ function Login() {
   // useNavigate es el equivalente a window.location.href en React
   const navigate = useNavigate()
 
-  // si ya hay sesion, mando al inicio
+useEffect(() => {
+  // si ya hay sesion activa, mando al inicio
   if (localStorage.getItem("user")) {
     navigate("/")
   }
+}, [])
 
-  async function handleSubmit(e: React.FormEvent) {
+async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError("")
 
     const response = await fetch("http://localhost:5001/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      credentials: "include",
       body: JSON.stringify({ email, password }),
     })
 
     const data = await response.json()
 
     if (response.ok) {
-      // guardo el usuario en localStorage y voy al inicio
+      // guardo el usuario y el token en localStorage
       localStorage.setItem("user", JSON.stringify(data.user))
+      localStorage.setItem("token", data.token)
       navigate("/")
     } else {
       setError(data.error)
