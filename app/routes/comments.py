@@ -33,6 +33,7 @@ def create_comment(post_id):
         link=data.get("link"),
         post_id=post_id,
         user_id=current_user_id,
+        parent_id=data.get("parent_id"),
     )
 
     db.session.add(comment)

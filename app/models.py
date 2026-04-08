@@ -109,6 +109,12 @@ class Comment(db.Model):
     # id del usuario que hizo el comentario
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
 
+    # referencia al comentario padre (si es una respuesta a otro comentario)
+    parent_id = db.Column(db.Integer, db.ForeignKey("comments.id"), nullable=True)
+
+    # relacion con el comentario padre
+    replies = db.relationship("Comment", backref=db.backref("parent", remote_side=[id]))
+
     # relaciones con Post y User
     post = db.relationship("Post", backref="comments")
     user = db.relationship("User", backref="comments")
@@ -123,4 +129,5 @@ class Comment(db.Model):
             "post_id": self.post_id,
             "user_id": self.user_id,
             "username": self.user.username,
+            "parent_id": self.parent_id,
         }

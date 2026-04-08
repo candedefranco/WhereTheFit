@@ -415,3 +415,9 @@ select:focus {
   display: block;
   margin-top: 4px;
 }
+
+.comment-reply {
+  margin-left: 24px;
+  border-left: 3px solid #e0e0e0;
+  padding-left: 12px;
+}
