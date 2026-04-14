@@ -17,6 +17,9 @@ interface Post {
   created_at: string
   user_id: number
   username: string
+  resolved_location: string | null
+  resolved_instagram: string | null
+  resolved_link: string | null
 }
 
 interface Comment {
@@ -152,8 +155,19 @@ async function confirmDeleteComment() {
               </span>
             </div>
             <p className="post-meta">@{post.username} · {new Date(post.created_at).toLocaleDateString("es-AR")}</p>
-            {post.category && <p className="post-category">{post.category}</p>}
-            <p className="post-description">{post.description}</p>
+            {/* muestro donde se encontro la prenda si el post esta resuelto */}
+            {post.status === "resolved" && (post.resolved_location || post.resolved_instagram || post.resolved_link) && (
+              <div style={{ marginTop: "12px", padding: "12px", backgroundColor: "#e8f5e9", borderRadius: "8px" }}>
+                <p style={{ fontWeight: 600, color: "#2e7d32", marginBottom: "8px" }}>✓ Encontrado en:</p>
+                {post.resolved_location && <p style={{ fontSize: "14px" }}>📍 {post.resolved_location}</p>}
+                {post.resolved_instagram && <p style={{ fontSize: "14px" }}>📸 {post.resolved_instagram}</p>}
+                {post.resolved_link && (
+                  <a href={post.resolved_link} target="_blank" rel="noreferrer" style={{ fontSize: "14px", color: "#2e7d32" }}>
+                    🔗 {post.resolved_link}
+                  </a>
+                )}
+              </div>
+            )}
 
             {/* botones solo para el dueno del post */}
             {currentUser && currentUser.id === post.user_id && (

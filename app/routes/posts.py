@@ -126,20 +126,18 @@ def update_post(post_id):
 @posts_bp.route("/<int:post_id>", methods=["DELETE"])
 @jwt_required()
 def delete_post(post_id):
-    # obtengo el ID del usuario logueado
     current_user_id = int(get_jwt_identity())
 
-    # busco el post por ID
     post = db.session.get(Post, post_id)
     if not post:
         return jsonify({"error": "Publicación no encontrada"}), 404
 
-    # verifico que el post le pertenezca al usuario logueado
     if post.user_id != current_user_id:
         return jsonify({"error": "No podés borrar una publicación que no es tuya"}), 403
 
-    # borro todos los comentarios del post antes de borrarlo
-    from app.models import Comment
+    # borro las imagenes, comentarios y despues el post
+    from app.models import Comment, PostImage
+    PostImage.query.filter_by(post_id=post_id).delete()
     Comment.query.filter_by(post_id=post_id).delete()
 
     db.session.delete(post)

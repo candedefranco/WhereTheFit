@@ -10,7 +10,6 @@ function EditPost() {
   const [category, setCategory] = useState("")
   const [imageUrl, setImageUrl] = useState("")
   const [imageFile, setImageFile] = useState<File | null>(null)
-  const [status, setStatus] = useState("active")
   const [tags, setTags] = useState<string[]>([])
   const [customTag, setCustomTag] = useState("")
   const [error, setError] = useState("")
@@ -32,7 +31,6 @@ function EditPost() {
     setDescription(data.description)
     setCategory(data.category || "")
     setImageUrl(data.image_url || "")
-    setStatus(data.status)
     // cargo los tags existentes del post
     setTags(data.tags || [])
   }
@@ -79,7 +77,6 @@ function EditPost() {
       formData.append("title", title)
       formData.append("description", description)
       formData.append("category", category)
-      formData.append("status", status)
       formData.append("tags", tags.join(","))
       formData.append("image", imageFile)
 
@@ -101,7 +98,7 @@ function EditPost() {
     // si no hay imagen nueva, mando solo JSON
     const response = await apiFetch(`/posts/${id}`, {
       method: "PUT",
-      body: JSON.stringify({ title, description, category, status, tags: tags.join(",") }),
+      body: JSON.stringify({ title, description, category, tags: tags.join(",") }),
     })
 
     const data = await response.json()
@@ -210,15 +207,6 @@ function EditPost() {
                 onChange={(e) => setImageFile(e.target.files?.[0] || null)}
               />
             </div>
-
-            {/* selector de estado */}
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-            >
-              <option value="active">En búsqueda</option>
-              <option value="resolved">Resuelto</option>
-            </select>
 
             <div className="btn-row">
               <button type="submit" className="btn">Guardar cambios</button>
