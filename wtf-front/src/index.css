@@ -352,18 +352,21 @@ select:focus {
 
 .post-image {
   width: 100%;
-  max-height: 300px;
-  object-fit: cover;
+  max-height: 500px;
+  object-fit: contain;
   border-radius: 8px;
   margin-bottom: 16px;
+  background-color: #f5f5f5;
 }
 
 /* badge de estado */
 .status-badge {
-  font-size: 12px;
+  font-size: 11px;
   padding: 4px 10px;
   border-radius: 20px;
   font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .status-badge.active {

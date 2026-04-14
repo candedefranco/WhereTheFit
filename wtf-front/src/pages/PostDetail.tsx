@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import Layout from "../components/Layout"
 import { apiFetch } from "../api"
+import ConfirmModal from "../components/ConfirmModal"
 
 // defino los tipos para TypeScript
 interface Post {
@@ -35,6 +36,9 @@ function PostDetail() {
   const [replyingTo, setReplyingTo] = useState<number | null>(null)
   const [error, setError] = useState("")
   const navigate = useNavigate()
+  // estados para el modal de confirmacion de comentarios
+  const [showCommentModal, setShowCommentModal] = useState(false)
+  const [commentToDelete, setCommentToDelete] = useState<number | null>(null)
 
   // obtengo el id del post de la URL (ej: /feed/post/3)
   const { id } = useParams()
@@ -99,18 +103,26 @@ function PostDetail() {
     }
   }
 
-  async function deleteComment(commentId: number) {
-    if (!confirm("¿Segura que querés borrar este comentario?")) return
+async function deleteComment(commentId: number) {
+  // muestro el modal en vez del confirm nativo
+  setCommentToDelete(commentId)
+  setShowCommentModal(true)
+}
 
-    const response = await apiFetch(`/comments/${commentId}`, {
-      method: "DELETE",
-    })
+async function confirmDeleteComment() {
+  if (!commentToDelete) return
 
-    if (response.ok) {
-      // recargo los comentarios despues de borrar
-      loadComments()
-    }
+  const response = await apiFetch(`/comments/${commentToDelete}`, {
+    method: "DELETE",
+  })
+
+  setShowCommentModal(false)
+  setCommentToDelete(null)
+
+  if (response.ok) {
+    loadComments()
   }
+}
 
   // separo los comentarios raiz de las respuestas
   const rootComments = comments.filter(c => c.parent_id === null)
@@ -317,6 +329,15 @@ function PostDetail() {
           {error && <p className="error">{error}</p>}
         </div>
       </div>
+
+      {/* modal de confirmacion de borrado de comentario */}
+      {showCommentModal && (
+        <ConfirmModal
+          message="¿Segura que querés borrar este comentario?"
+          onConfirm={confirmDeleteComment}
+          onCancel={() => { setShowCommentModal(false); setCommentToDelete(null) }}
+        />
+      )}
     </Layout>
   )
 }
