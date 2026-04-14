@@ -43,9 +43,13 @@ const [postToDelete, setPostToDelete] = useState<number | null>(null)
     }
   }, [])
 
-  async function loadPosts() {
+async function loadPosts() {
     // traigo todos los posts del back
     const response = await apiFetch("/posts")
+    if (!response.ok) {
+      setError("Error al cargar las publicaciones")
+      return
+    }
     const data = await response.json()
     setPosts(data)
   }

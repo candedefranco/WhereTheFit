@@ -95,6 +95,9 @@ class Post(db.Model):
                 "user_id": self.user_id,
                 "username": self.user.username,
                 "tags": self.tags.split(",") if self.tags else [],
+                "resolved_location": self.resolved_location,
+                "resolved_instagram": self.resolved_instagram,
+                "resolved_link": self.resolved_link,
         }
 
 

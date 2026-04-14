@@ -29,10 +29,10 @@ function Layout({ children, showLogout = true }: LayoutProps) {
             <img src="/logo-wtf.svg" alt="WhereTheFit logo" width={45} height={40} /> <span>WhereTheFit</span>
         </a>
         <div className="navbar-links">
-          <a href="/feed">Feed</a>
+          {/* solo muestro feed si hay sesion activa */}
+          {localStorage.getItem("user") && <a href="/feed">Feed</a>}
           <a href="/feed/create">Publicar</a>
           <a href="/profile">Perfil</a>
-          {/* solo muestro el boton si showLogout es true */}
           {showLogout && (
             <button onClick={handleLogout} className="btn btn-small">
               Cerrar sesión
