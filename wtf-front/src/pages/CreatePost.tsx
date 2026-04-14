@@ -10,6 +10,12 @@ function CreatePost() {
   const [category, setCategory] = useState("")
   const [imageUrl, setImageUrl] = useState("")
   const [error, setError] = useState("")
+
+  // estados para tags y estilos nuevos
+  const [tags, setTags] = useState<string[]>([])
+  const [customTag, setCustomTag] = useState("")
+  const predefinedTags = ["Vintage", "Streetwear", "Coquette", "Old Money", "Aesthetic", "Minimalist"]
+
   const navigate = useNavigate()
 
   // traigo el usuario logueado del localStorage
@@ -21,6 +27,27 @@ function CreatePost() {
       navigate("/login")
     }
   }, [])
+
+  // funcion para seleccionar/deseleccionar tags predefinidos
+  const toggleTag = (tag: string) => {
+    if (tags.includes(tag)) {
+      setTags(tags.filter(t => t !== tag))
+    } else if (tags.length < 5) {
+      setTags([...tags, tag])
+    }
+  }
+
+  // funcion para agregar tags escritos a mano apretando Enter
+  const addCustomTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && customTag.trim() !== "") {
+      e.preventDefault()
+      const newTag = customTag.trim().replace("#", "")
+      if (!tags.includes(newTag)) {
+        setTags([...tags, newTag])
+      }
+      setCustomTag("")
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -34,6 +61,7 @@ function CreatePost() {
         description,
         category,
         image_url: imageUrl,
+        tags: tags.join(","),
       }),
     })
 
@@ -75,6 +103,43 @@ function CreatePost() {
               value={category}
               onChange={(e) => setCategory(e.target.value)}
             />
+
+            {/* seccion de estilos y tags estilo pinterest */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
+              <label style={{ fontSize: '13px', fontWeight: 600, color: '#444', marginLeft: '4px' }}>Estilos (Tags)</label>
+              <div className="tags-selection-container" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {predefinedTags.map(tag => (
+                  <button
+                    key={tag}
+                    type="button"
+                    className={`tag-pill ${tags.includes(tag) ? 'active' : ''}`}
+                    onClick={() => toggleTag(tag)}
+                  >
+                    #{tag}
+                  </button>
+                ))}
+                {tags.filter(t => !predefinedTags.includes(t)).map(tag => (
+                  <button
+                    key={tag}
+                    type="button"
+                    className="tag-pill active"
+                    onClick={() => toggleTag(tag)}
+                  >
+                    #{tag}
+                  </button>
+                ))}
+                <input
+                  type="text"
+                  placeholder="+ nuevo"
+                  value={customTag}
+                  onChange={(e) => setCustomTag(e.target.value)}
+                  onKeyDown={addCustomTag}
+                  className="tag-input-style"
+                  style={{ border: '1px dashed #6a9ea8', borderRadius: '20px', padding: '4px 12px', fontSize: '12px', width: '80px', outline: 'none' }}
+                />
+              </div>
+            </div>
+
             {/* url de la imagen de referencia, opcional */}
             <input
               type="text"
