@@ -475,3 +475,68 @@ select:focus {
   padding: 2px 8px;
   border-radius: 12px;
 }
+
+/* grid masonry estilo pinterest */
+.my-masonry-grid {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+}
+
+.my-masonry-grid_column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* card del feed estilo pinterest */
+.feed-card {
+  padding: 0;
+  overflow: hidden;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.feed-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+/* imagen del feed sin altura fija para efecto pinterest */
+.feed-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+}
+
+/* contenido de la card del feed */
+.feed-content {
+  padding: 12px;
+}
+
+/* truncar descripcion larga */
+.truncate-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* tags en el feed */
+.post-tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.post-tag-item {
+  background-color: #e8f4f6;
+  color: #6a9ea8;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: 500;
+}

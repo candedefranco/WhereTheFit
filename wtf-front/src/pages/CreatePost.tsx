@@ -1,14 +1,13 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import Layout from "../components/Layout"
-import { apiFetch } from "../api"
 
 function CreatePost() {
   // estados para guardar lo que escribe el usuario
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [category, setCategory] = useState("")
-  const [imageUrl, setImageUrl] = useState("")
+  const [imageFile, setImageFile] = useState<File | null>(null)
   const [error, setError] = useState("")
 
   // estados para tags y estilos nuevos
@@ -49,26 +48,34 @@ function CreatePost() {
     }
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError("")
 
-    // mando el post al back con los datos del formulario
-    const response = await apiFetch("/posts", {
+    // uso FormData para poder mandar el archivo de imagen
+    const formData = new FormData()
+    formData.append("title", title)
+    formData.append("description", description)
+    formData.append("category", category)
+    formData.append("tags", tags.join(","))
+    if (imageFile) {
+      // agrego la imagen al FormData si el usuario subio una
+      formData.append("image", imageFile)
+    }
+
+    // mando FormData sin Content-Type, el browser lo pone solo
+    const token = localStorage.getItem("token")
+    const response = await fetch("http://localhost:5001/posts", {
       method: "POST",
-      body: JSON.stringify({
-        title,
-        description,
-        category,
-        image_url: imageUrl,
-        tags: tags.join(","),
-      }),
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
     })
 
     const data = await response.json()
 
     if (response.ok) {
-      // si se creo bien, voy al feed
       navigate("/feed")
     } else {
       setError(data.error)
@@ -140,13 +147,12 @@ function CreatePost() {
               </div>
             </div>
 
-            {/* url de la imagen de referencia, opcional */}
-            <input
-              type="text"
-              placeholder="URL de imagen de referencia"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-            />
+            {/* input para subir imagen desde la computadora */}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+              />
             <div className="btn-row">
               <button type="submit" className="btn">Publicar</button>
               <a href="/feed" className="btn btn-secondary">Cancelar</a>

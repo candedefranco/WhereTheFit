@@ -61,6 +61,9 @@ class Post(db.Model):
     # imagen de referencia (url)
     image_url = db.Column(db.String(500), nullable=True)
 
+    # tags para busqueda (ej: campera, vintage, streetwear)
+    tags = db.Column(db.Text, nullable=True)
+
     # estado del post: active o resolved
     status = db.Column(db.String(20), nullable=False, default="active")
 
@@ -85,6 +88,7 @@ class Post(db.Model):
                 "created_at": self.created_at.isoformat(),
                 "user_id": self.user_id,
                 "username": self.user.username,
+                "tags": self.tags.split(",") if self.tags else [],
         }
 
 
