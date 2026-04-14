@@ -39,34 +39,34 @@ def get_user_posts(user_id):
 def create_post():
     # obtengo el ID del usuario logueado desde el token
     current_user_id = int(get_jwt_identity())
-    # uso request.form porque mandamos FormData desde el front
     data = request.form
 
     # verifico que esten los campos obligatorios
     if not data.get("title") or not data.get("description"):
         return jsonify({"error": "Titulo y descripcion son obligatorios"}), 400
 
-    image_url = None
-
-    # si el usuario mando una imagen, la subo a S3
-    if "image" in request.files:
-        file = request.files["image"]
-        if file.filename != "":
-            image_url = upload_image(file)
-
-    # creo el post con los datos recibidos
+    # creo el post
     post = Post(
         title=data["title"],
         description=data["description"],
         category=data.get("category"),
         tags=data.get("tags"),
-        image_url=image_url,
         user_id=current_user_id,
     )
 
     db.session.add(post)
-    db.session.commit()
+    db.session.flush()  # consigo el id del post antes del commit
 
+    # subo hasta 3 imagenes a S3
+    from app.models import PostImage
+    files = request.files.getlist("images")
+    for i, file in enumerate(files[:3]):
+        if file.filename != "":
+            url = upload_image(file)
+            image = PostImage(url=url, order=i, post_id=post.id)
+            db.session.add(image)
+
+    db.session.commit()
     return jsonify(post.to_dict()), 201
 
 

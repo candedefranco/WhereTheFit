@@ -13,6 +13,7 @@ interface Post {
   description: string
   category: string | null
   image_url: string | null
+  images: { id: number; url: string; order: number }[]
   tags?: string[] // lo agregamos como opcional para que no rompa si el back no lo manda
   status: string
   created_at: string
@@ -102,10 +103,15 @@ async function confirmDelete() {
           >
             {posts.map(post => (
               <div key={post.id} className="card post-card feed-card">
-                {/* muestro la imagen solo si existe */}
-                {/* muestro la imagen solo si existe */}
-                {post.image_url && (
-                  <img src={post.image_url} alt={post.title} className="post-image feed-image" />
+                {/* muestro la primera imagen si existe */}
+                {(post.images?.[0]?.url || post.image_url) && (
+                  <a href={`/feed/post/${post.id}`}>
+                    <img
+                      src={post.images?.[0]?.url || post.image_url || ""}
+                      alt={post.title}
+                      className="post-image feed-image"
+                    />
+                  </a>
                 )}
                 <div className="post-content feed-content">
                   <div className="post-header">

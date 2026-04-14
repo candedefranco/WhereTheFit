@@ -89,6 +89,7 @@ class Post(db.Model):
                 "description": self.description,
                 "category": self.category,
                 "image_url": self.image_url,
+                "images": [img.to_dict() for img in sorted(self.images, key=lambda x: x.order)],
                 "status": self.status,
                 "created_at": self.created_at.isoformat(),
                 "user_id": self.user_id,
@@ -139,4 +140,31 @@ class Comment(db.Model):
             "user_id": self.user_id,
             "username": self.user.username,
             "parent_id": self.parent_id,
+        }
+
+class PostImage(db.Model):
+    __tablename__ = "post_images"
+
+    # id unico que se genera automaticamente para cada imagen
+    id = db.Column(db.Integer, primary_key=True)
+
+    # url de la imagen en S3
+    url = db.Column(db.String(500), nullable=False)
+
+    # orden de la imagen en el post (0, 1, 2)
+    order = db.Column(db.Integer, nullable=False, default=0)
+
+    # id del post al que pertenece la imagen
+    post_id = db.Column(db.Integer, db.ForeignKey("posts.id"), nullable=False)
+
+    # relacion con el modelo Post
+    post = db.relationship("Post", backref="images")
+
+    def to_dict(self):
+        # convierto el objeto PostImage a diccionario para devolverlo como JSON
+        return {
+            "id": self.id,
+            "url": self.url,
+            "order": self.order,
+            "post_id": self.post_id,
         }

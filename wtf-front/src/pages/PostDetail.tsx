@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom"
 import Layout from "../components/Layout"
 import { apiFetch } from "../api"
 import ConfirmModal from "../components/ConfirmModal"
+import ImageCarousel from "../components/ImageCarousel"
 
 // defino los tipos para TypeScript
 interface Post {
@@ -11,6 +12,7 @@ interface Post {
   description: string
   category: string | null
   image_url: string | null
+  images: { id: number; url: string; order: number }[]
   status: string
   created_at: string
   user_id: number
@@ -136,9 +138,12 @@ async function confirmDeleteComment() {
       <div className="container">
         {/* detalle del post */}
         <div className="card post-card">
-          {post.image_url && (
+          {/* carrusel de imagenes del post */}
+          {post.images && post.images.length > 0 ? (
+            <ImageCarousel images={post.images} title={post.title} />
+          ) : post.image_url ? (
             <img src={post.image_url} alt={post.title} className="post-image" />
-          )}
+          ) : null}
           <div className="post-content">
             <div className="post-header">
               <h2>{post.title}</h2>

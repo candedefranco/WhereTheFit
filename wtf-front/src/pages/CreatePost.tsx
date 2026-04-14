@@ -7,7 +7,7 @@ function CreatePost() {
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [category, setCategory] = useState("")
-  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imageFiles, setImageFiles] = useState<File[]>([])
   const [error, setError] = useState("")
 
   // estados para tags y estilos nuevos
@@ -58,10 +58,9 @@ async function handleSubmit(e: React.FormEvent) {
     formData.append("description", description)
     formData.append("category", category)
     formData.append("tags", tags.join(","))
-    if (imageFile) {
-      // agrego la imagen al FormData si el usuario subio una
-      formData.append("image", imageFile)
-    }
+    imageFiles.forEach((file) => {
+      formData.append("images", file)
+    })
 
     // mando FormData sin Content-Type, el browser lo pone solo
     const token = localStorage.getItem("token")
@@ -160,12 +159,20 @@ async function handleSubmit(e: React.FormEvent) {
               </div>
             </div>
 
-            {/* input para subir imagen desde la computadora */}
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-              />
+            <div>
+            <p style={{ fontSize: "13px", color: "#888", marginBottom: "6px" }}>
+              {imageFiles.length > 0 ? `${imageFiles.length} imagen(es) seleccionada(s)` : "Subir imágenes (máximo 3)"}
+            </p>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(e) => {
+                const files = Array.from(e.target.files || []).slice(0, 3)
+                setImageFiles(files)
+              }}
+            />
+          </div>
             <div className="btn-row">
               <button type="submit" className="btn">Publicar</button>
               <a href="/feed" className="btn btn-secondary">Cancelar</a>
