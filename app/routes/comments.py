@@ -42,7 +42,7 @@ def create_comment(post_id):
     return jsonify(comment.to_dict()), 201
 
 
-# DELETE /comments/<id> → borra un comentario
+# DELETE /comments/<id> → borra un comentario y sus respuestas
 @comments_bp.route("/<int:comment_id>", methods=["DELETE"])
 @jwt_required()
 def delete_comment(comment_id):
@@ -58,7 +58,9 @@ def delete_comment(comment_id):
     if comment.user_id != current_user_id:
         return jsonify({"error": "No podés borrar un comentario que no es tuyo"}), 403
 
+    # borro todas las respuestas del comentario antes de borrarlo
+    Comment.query.filter_by(parent_id=comment_id).delete()
+
     db.session.delete(comment)
     db.session.commit()
-
     return jsonify({"message": f"Comentario {comment_id} eliminado"}), 200

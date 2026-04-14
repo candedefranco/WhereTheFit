@@ -42,6 +42,12 @@ function PostDetail() {
   // traigo el usuario logueado del localStorage
   const currentUser = JSON.parse(localStorage.getItem("user") || "null")
 
+  // estados para marcar como resuelto
+  const [showResolveForm, setShowResolveForm] = useState(false)
+  const [resolvedLocation, setResolvedLocation] = useState("")
+  const [resolvedInstagram, setResolvedInstagram] = useState("")
+  const [resolvedLink, setResolvedLink] = useState("")
+
   async function loadPost() {
     // traigo los datos del post
     const response = await apiFetch(`/posts/${id}`)
@@ -112,6 +118,7 @@ function PostDetail() {
 
   if (!post) return null
 
+
   return (
     <Layout>
       <div className="container">
@@ -133,8 +140,67 @@ function PostDetail() {
 
             {/* botones solo para el dueno del post */}
             {currentUser && currentUser.id === post.user_id && (
-              <div className="btn-row" style={{ marginTop: "12px" }}>
-                <a href={`/feed/edit/${post.id}`} className="btn btn-small">Editar</a>
+              <div style={{ marginTop: "12px" }}>
+                <div className="btn-row">
+                  <a href={`/feed/edit/${post.id}`} className="btn btn-small">Editar</a>
+                  {/* solo muestro el boton si el post esta activo */}
+                  {post.status === "active" && (
+                    <button
+                      onClick={() => setShowResolveForm(!showResolveForm)}
+                      className="btn btn-small"
+                      style={{ backgroundColor: "#2e7d32", color: "white" }}
+                    >
+                      {showResolveForm ? "Cancelar" : "✓ Marcar como resuelto"}
+                    </button>
+                  )}
+                </div>
+
+                {/* formulario para marcar como resuelto */}
+                {showResolveForm && (
+                  <div style={{ marginTop: "12px", padding: "16px", backgroundColor: "#f9f9f9", borderRadius: "8px" }}>
+                    <p style={{ fontWeight: 600, marginBottom: "12px" }}>¿Dónde lo encontraste?</p>
+                    <input
+                      type="text"
+                      placeholder="Lugar físico (ej: Zara Palermo)"
+                      value={resolvedLocation}
+                      onChange={(e) => setResolvedLocation(e.target.value)}
+                      style={{ marginBottom: "8px" }}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Instagram (ej: @tienda)"
+                      value={resolvedInstagram}
+                      onChange={(e) => setResolvedInstagram(e.target.value)}
+                      style={{ marginBottom: "8px" }}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Link (ej: https://tienda.com)"
+                      value={resolvedLink}
+                      onChange={(e) => setResolvedLink(e.target.value)}
+                      style={{ marginBottom: "12px" }}
+                    />
+                    <button
+                      onClick={async () => {
+                        await apiFetch(`/posts/${post.id}`, {
+                          method: "PUT",
+                          body: JSON.stringify({
+                            status: "resolved",
+                            resolved_location: resolvedLocation,
+                            resolved_instagram: resolvedInstagram,
+                            resolved_link: resolvedLink,
+                          }),
+                        })
+                        setShowResolveForm(false)
+                        loadPost()
+                      }}
+                      className="btn btn-small"
+                      style={{ backgroundColor: "#2e7d32", color: "white" }}
+                    >
+                      Confirmar
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -206,11 +272,20 @@ function PostDetail() {
                         {reply.link}
                       </a>
                     )}
-                    {currentUser && currentUser.id === reply.user_id && (
-                      <button onClick={() => deleteComment(reply.id)} className="btn btn-danger btn-small" style={{ marginTop: "8px" }}>
-                        Borrar
+                    <div className="btn-row" style={{ marginTop: "8px" }}>
+                      {/* responder a este hilo apunta al comentario raiz */}
+                      <button
+                        onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
+                        className="btn btn-small btn-secondary"
+                      >
+                        {replyingTo === comment.id ? "Cancelar" : "Responder"}
                       </button>
-                    )}
+                      {currentUser && currentUser.id === reply.user_id && (
+                        <button onClick={() => deleteComment(reply.id)} className="btn btn-danger btn-small">
+                          Borrar
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

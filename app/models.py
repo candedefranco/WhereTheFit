@@ -67,6 +67,11 @@ class Post(db.Model):
     # estado del post: active o resolved
     status = db.Column(db.String(20), nullable=False, default="active")
 
+    # donde se encontro la prenda (se llena al marcar como resuelto)
+    resolved_location = db.Column(db.String(200), nullable=True)
+    resolved_instagram = db.Column(db.String(200), nullable=True)
+    resolved_link = db.Column(db.String(500), nullable=True)
+
     # fecha de creacion, se llena sola
     created_at = db.Column(db.DateTime, server_default=db.func.now())
 

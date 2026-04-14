@@ -12,8 +12,8 @@ posts_bp = Blueprint("posts", __name__, url_prefix="/posts")
 # GET /posts → devuelve todos los posts ordenados por fecha
 @posts_bp.route("", methods=["GET"])
 def get_posts():
-    # traigo solo los posts activos ordenados del mas nuevo al mas viejo
-    posts = Post.query.filter_by(status="active").order_by(Post.created_at.desc()).all()
+    # traigo todos los posts ordenados del mas nuevo al mas viejo
+    posts = Post.query.order_by(Post.created_at.desc()).all()
     return jsonify([p.to_dict() for p in posts]), 200
 
 
@@ -93,6 +93,12 @@ def update_post(post_id):
         post.image_url = data["image_url"]
     if "status" in data:
         post.status = data["status"]
+    if "resolved_location" in data:
+        post.resolved_location = data["resolved_location"]
+    if "resolved_instagram" in data:
+        post.resolved_instagram = data["resolved_instagram"]
+    if "resolved_link" in data:
+        post.resolved_link = data["resolved_link"]
 
     db.session.commit()
     return jsonify(post.to_dict()), 200
@@ -113,6 +119,10 @@ def delete_post(post_id):
     # verifico que el post le pertenezca al usuario logueado
     if post.user_id != current_user_id:
         return jsonify({"error": "No podés borrar una publicación que no es tuya"}), 403
+
+    # borro todos los comentarios del post antes de borrarlo
+    from app.models import Comment
+    Comment.query.filter_by(post_id=post_id).delete()
 
     db.session.delete(post)
     db.session.commit()
