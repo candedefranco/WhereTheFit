@@ -46,11 +46,6 @@ async function handleSubmit(e: React.FormEvent) {
           <a href="/" className="navbar-logo">
             <img src="/logo-wtf.svg" alt="WhereTheFit logo" width={45} height={40} /> <span>WhereTheFit</span>
           </a>
-          <div className="navbar-links">
-            <a href="#">Feed</a>
-            <a href="/create">Crear</a>
-            <a href="/profile">Perfil</a>
-          </div>
         </nav>
 
         {/* formulario centrado */}
