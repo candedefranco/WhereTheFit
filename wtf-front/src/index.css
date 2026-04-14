@@ -421,3 +421,57 @@ select:focus {
   border-left: 3px solid #e0e0e0;
   padding-left: 12px;
 }
+
+/* tags */
+
+.tag-pill {
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid #6a9ea8;
+  background: white;
+  color: #6a9ea8;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tag-pill:hover {
+  background: #f0f7f8;
+}
+
+.tag-pill.active {
+  background: #6a9ea8;
+  color: white;
+}
+
+.tag-input-style {
+  border: 1px dashed #6a9ea8;
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 12px;
+  width: 85px;
+  outline: none;
+  background: transparent;
+  color: #333;
+}
+
+.tag-input-style:focus {
+  background: white;
+  border: 1px solid #6a9ea8;
+}
+
+.post-tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.post-tag-item {
+  color: #6a9ea8;
+  font-size: 12px;
+  font-weight: 500;
+  background-color: #f0f7f8;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
