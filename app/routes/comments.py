@@ -23,8 +23,8 @@ def create_comment(post_id):
     current_user_id = int(get_jwt_identity())
     data = request.get_json()
 
-    # verifico que venga el texto del comentario
-    if not data.get("text"):
+    # verifico que venga el texto del comentario y que no sea solo espacios
+    if not data.get("text") or not data.get("text").strip():
         return jsonify({"error": "El comentario no puede estar vacío"}), 400
 
     # creo el comentario

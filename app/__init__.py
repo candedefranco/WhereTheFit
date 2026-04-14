@@ -45,7 +45,7 @@ def create_app():
     db.init_app(app)
     bcrypt.init_app(app)
     jwt.init_app(app)
-    CORS(app, supports_credentials=True, origins=["http://localhost:5173", "http://127.0.0.1:5173"])
+    CORS(app, supports_credentials=True, origins=["http://localhost:5173", "http://127.0.0.1:5173"], expose_headers=["Authorization"])
 
     # registro las rutas de usuarios (los endpoints de /users)
     from app.routes.users import users_bp

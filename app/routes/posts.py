@@ -1,4 +1,4 @@
-import os
+import re
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app import db
@@ -80,7 +80,17 @@ def update_post(post_id):
     if post.user_id != current_user_id:
         return jsonify({"error": "No podés editar una publicación que no es tuya"}), 403
 
-    data = request.get_json()
+    # acepto tanto FormData como JSON
+    if request.content_type and "multipart/form-data" in request.content_type:
+        data = request.form
+
+        # si viene una imagen nueva, la subo a S3
+        if "image" in request.files:
+            file = request.files["image"]
+            if file.filename != "":
+                post.image_url = upload_image(file)
+    else:
+        data = request.get_json()
 
     # actualizo solo los campos que vinieron en el body
     if "title" in data:
@@ -89,20 +99,22 @@ def update_post(post_id):
         post.description = data["description"]
     if "category" in data:
         post.category = data["category"]
-    if "image_url" in data:
-        post.image_url = data["image_url"]
     if "status" in data:
         post.status = data["status"]
+    if "tags" in data:
+        post.tags = data["tags"]
     if "resolved_location" in data:
         post.resolved_location = data["resolved_location"]
     if "resolved_instagram" in data:
         post.resolved_instagram = data["resolved_instagram"]
     if "resolved_link" in data:
+        # valido que el link tenga formato de URL
+        if data["resolved_link"] and not re.match(r'^https?://.+', data["resolved_link"]):
+            return jsonify({"error": "El link debe empezar con http:// o https://"}), 400
         post.resolved_link = data["resolved_link"]
 
     db.session.commit()
     return jsonify(post.to_dict()), 200
-
 
 # DELETE /posts/<id> → borra un post por su ID
 @posts_bp.route("/<int:post_id>", methods=["DELETE"])

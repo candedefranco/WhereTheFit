@@ -9,6 +9,7 @@ function EditPost() {
   const [description, setDescription] = useState("")
   const [category, setCategory] = useState("")
   const [imageUrl, setImageUrl] = useState("")
+  const [imageFile, setImageFile] = useState<File | null>(null)
   const [status, setStatus] = useState("active")
   const [error, setError] = useState("")
   const navigate = useNavigate()
@@ -23,7 +24,6 @@ function EditPost() {
     // traigo los datos del post para prellenar el formulario
     const response = await apiFetch(`/posts/${id}`)
     const data = await response.json()
-
     setTitle(data.title)
     setDescription(data.description)
     setCategory(data.category || "")
@@ -44,22 +44,40 @@ function EditPost() {
     e.preventDefault()
     setError("")
 
-    // mando los datos actualizados al back
+    const token = localStorage.getItem("token")
+
+    // si hay imagen nueva, mando todo como FormData
+    if (imageFile) {
+      const formData = new FormData()
+      formData.append("title", title)
+      formData.append("description", description)
+      formData.append("category", category)
+      formData.append("status", status)
+      formData.append("image", imageFile)
+
+      const response = await fetch(`http://localhost:5001/posts/${id}`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      })
+
+      const data = await response.json()
+      if (response.ok) {
+        navigate("/feed")
+      } else {
+        setError(data.error)
+      }
+      return
+    }
+
+    // si no hay imagen nueva, mando solo JSON
     const response = await apiFetch(`/posts/${id}`, {
       method: "PUT",
-      body: JSON.stringify({
-        title,
-        description,
-        category,
-        image_url: imageUrl,
-        status,
-      }),
+      body: JSON.stringify({ title, description, category, status }),
     })
 
     const data = await response.json()
-
     if (response.ok) {
-      // si se actualizo bien, vuelvo al feed
       navigate("/feed")
     } else {
       setError(data.error)
@@ -93,18 +111,31 @@ function EditPost() {
               value={category}
               onChange={(e) => setCategory(e.target.value)}
             />
-            <input
-              type="text"
-              placeholder="URL de imagen de referencia"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-            />
 
-            {/* selector para marcar el post como resuelto */}
+            {/* imagen actual */}
+            {imageUrl && !imageFile && (
+              <div style={{ marginBottom: "8px" }}>
+                <p style={{ fontSize: "13px", color: "#888", marginBottom: "6px" }}>Imagen actual:</p>
+                <img src={imageUrl} alt="imagen actual" style={{ width: "120px", borderRadius: "6px" }} />
+              </div>
+            )}
+
+            {/* input para subir imagen nueva */}
+            <div>
+              <p style={{ fontSize: "13px", color: "#888", marginBottom: "6px" }}>
+                {imageFile ? `Nueva imagen: ${imageFile.name}` : "Cambiar imagen (opcional)"}
+              </p>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+              />
+            </div>
+
+            {/* selector de estado */}
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value)}
-              className="select-input"
             >
               <option value="active">En búsqueda</option>
               <option value="resolved">Resuelto</option>

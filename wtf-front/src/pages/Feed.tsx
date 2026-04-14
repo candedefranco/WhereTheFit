@@ -91,6 +91,7 @@ function Feed() {
             {posts.map(post => (
               <div key={post.id} className="card post-card feed-card">
                 {/* muestro la imagen solo si existe */}
+                {/* muestro la imagen solo si existe */}
                 {post.image_url && (
                   <img src={post.image_url} alt={post.title} className="post-image feed-image" />
                 )}
