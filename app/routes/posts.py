@@ -26,6 +26,12 @@ def get_post(post_id):
         return jsonify({"error": "Publicación no encontrada"}), 404
     return jsonify(post.to_dict()), 200
 
+# GET /posts/user/<user_id> → devuelve todos los posts de un usuario
+@posts_bp.route("/user/<int:user_id>", methods=["GET"])
+def get_user_posts(user_id):
+    # traigo todos los posts del usuario (activos y resueltos)
+    posts = Post.query.filter_by(user_id=user_id).order_by(Post.created_at.desc()).all()
+    return jsonify([p.to_dict() for p in posts]), 200
 
 # POST /posts → crea un post nuevo
 @posts_bp.route("", methods=["POST"])

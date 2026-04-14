@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import Layout from "../components/Layout"
 import { apiFetch } from "../api"
+import ConfirmModal from "../components/ConfirmModal"
 
 import Masonry from "react-masonry-css"
 
@@ -28,6 +29,10 @@ function Feed() {
   // traigo el usuario logueado del localStorage
   const currentUser = JSON.parse(localStorage.getItem("user") || "null")
 
+  // estados para el modal de confirmacion
+const [showModal, setShowModal] = useState(false)
+const [postToDelete, setPostToDelete] = useState<number | null>(null)
+
   // si no hay sesion, mando al login
   useEffect(() => {
     if (!currentUser) {
@@ -44,16 +49,23 @@ function Feed() {
     setPosts(data)
   }
 
-  async function deletePost(id: number) {
-    if (!confirm("¿Segura que querés borrar esta publicación?")) return
+async function deletePost(id: number) {
+    // muestro el modal en vez del confirm nativo
+    setPostToDelete(id)
+    setShowModal(true)
+  }
 
-    // borro el post del back
-    const response = await apiFetch(`/posts/${id}`, {
+async function confirmDelete() {
+    if (!postToDelete) return
+
+    const response = await apiFetch(`/posts/${postToDelete}`, {
       method: "DELETE",
     })
 
+    setShowModal(false)
+    setPostToDelete(null)
+
     if (response.ok) {
-      // recargo los posts despues de borrar
       loadPosts()
     } else {
       setError("Error al borrar la publicación")
@@ -137,7 +149,16 @@ function Feed() {
 
         {error && <p className="error">{error}</p>}
       </div>
-    </Layout>
+
+      {/* modal de confirmacion de borrado */}
+      {showModal && (
+        <ConfirmModal
+          message="¿Segura que querés borrar esta publicación?"
+          onConfirm={confirmDelete}
+          onCancel={() => { setShowModal(false); setPostToDelete(null) }}
+        />
+      )}
+</Layout>
   )
 }
 

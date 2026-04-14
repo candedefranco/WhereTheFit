@@ -97,19 +97,32 @@ async function handleSubmit(e: React.FormEvent) {
               required
             />
             {/* textarea para descripcion larga */}
-            <textarea
-              placeholder="Descripción (talle, zona, detalles de la prenda...)"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              required
-              rows={4}
-            />
-            <input
-              type="text"
-              placeholder="Categoría (ej: Camperas, Pantalones)"
+              <textarea
+                  placeholder="Descripción (talle, zona, detalles de la prenda...)"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  required
+                  rows={4}
+                  maxLength={500}
+              />
+            {/* dropdown de categoria */}
+            <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-            />
+            >
+              <option value="">Seleccioná una categoría</option>
+              <option value="Camperas">Camperas</option>
+              <option value="Pantalones">Pantalones</option>
+              <option value="Remeras">Remeras</option>
+              <option value="Vestidos">Vestidos</option>
+              <option value="Faldas">Faldas</option>
+              <option value="Zapatos">Zapatos</option>
+              <option value="Accesorios">Accesorios</option>
+              <option value="Bolsos">Bolsos</option>
+              <option value="Ropa interior">Ropa interior</option>
+              <option value="Deportivo">Deportivo</option>
+              <option value="Otro">Otro</option>
+            </select>
 
             {/* seccion de estilos y tags estilo pinterest */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>

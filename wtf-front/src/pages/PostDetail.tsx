@@ -252,6 +252,7 @@ function PostDetail() {
                       onChange={(e) => setNewComment(e.target.value)}
                       required
                       rows={2}
+                      maxLength={300}
                     />
                     <button type="submit" className="btn btn-small" style={{ marginTop: "8px" }}>
                       Comentar
@@ -301,6 +302,7 @@ function PostDetail() {
                 onChange={(e) => setNewComment(e.target.value)}
                 required
                 rows={3}
+                maxLength={300}
               />
               <input
                 type="text"
