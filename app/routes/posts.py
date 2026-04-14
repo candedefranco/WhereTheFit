@@ -1,7 +1,9 @@
+import os
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app import db
 from app.models import Post
+from app.services.s3 import upload_image
 
 # todas las rutas de aca van a empezar con /posts
 posts_bp = Blueprint("posts", __name__, url_prefix="/posts")
@@ -10,8 +12,8 @@ posts_bp = Blueprint("posts", __name__, url_prefix="/posts")
 # GET /posts → devuelve todos los posts ordenados por fecha
 @posts_bp.route("", methods=["GET"])
 def get_posts():
-    # traigo todos los posts ordenados del mas nuevo al mas viejo
-    posts = Post.query.order_by(Post.created_at.desc()).all()
+    # traigo solo los posts activos ordenados del mas nuevo al mas viejo
+    posts = Post.query.filter_by(status="active").order_by(Post.created_at.desc()).all()
     return jsonify([p.to_dict() for p in posts]), 200
 
 
@@ -31,18 +33,28 @@ def get_post(post_id):
 def create_post():
     # obtengo el ID del usuario logueado desde el token
     current_user_id = int(get_jwt_identity())
-    data = request.get_json()
+    # uso request.form porque mandamos FormData desde el front
+    data = request.form
 
     # verifico que esten los campos obligatorios
     if not data.get("title") or not data.get("description"):
         return jsonify({"error": "Titulo y descripcion son obligatorios"}), 400
+
+    image_url = None
+
+    # si el usuario mando una imagen, la subo a S3
+    if "image" in request.files:
+        file = request.files["image"]
+        if file.filename != "":
+            image_url = upload_image(file)
 
     # creo el post con los datos recibidos
     post = Post(
         title=data["title"],
         description=data["description"],
         category=data.get("category"),
-        image_url=data.get("image_url"),
+        tags=data.get("tags"),
+        image_url=image_url,
         user_id=current_user_id,
     )
 
