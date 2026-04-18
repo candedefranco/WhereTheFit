@@ -155,6 +155,11 @@ async function confirmDeleteComment() {
               </span>
             </div>
             <p className="post-meta">@{post.username} · {new Date(post.created_at).toLocaleDateString("es-AR")}</p>
+            {post.description && (
+              <div className="post-detail-description" style={{ marginTop: '16px', color: '#444', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>
+                <p>{post.description}</p>
+              </div>
+            )}
             {/* muestro donde se encontro la prenda si el post esta resuelto */}
             {post.status === "resolved" && (post.resolved_location || post.resolved_instagram || post.resolved_link) && (
               <div style={{ marginTop: "12px", padding: "12px", backgroundColor: "#e8f5e9", borderRadius: "8px" }}>
@@ -213,6 +218,11 @@ async function confirmDeleteComment() {
                     />
                     <button
                       onClick={async () => {
+                        // valido que el link tenga formato correcto
+                        if (resolvedLink && !/^https:\/\/.+/.test(resolvedLink)) {
+                          alert("El link debe empezar con https://")
+                          return
+                        }
                         await apiFetch(`/posts/${post.id}`, {
                           method: "PUT",
                           body: JSON.stringify({

@@ -90,11 +90,17 @@ def update_post(post_id):
     if request.content_type and "multipart/form-data" in request.content_type:
         data = request.form
 
-        # si viene una imagen nueva, la subo a S3
+        # si viene una imagen nueva, la subo a S3 y reemplazo las imagenes del post
         if "image" in request.files:
             file = request.files["image"]
             if file.filename != "":
-                post.image_url = upload_image(file)
+                from app.models import PostImage
+                # borro las imagenes viejas
+                PostImage.query.filter_by(post_id=post_id).delete()
+                # subo la nueva imagen a S3
+                url = upload_image(file)
+                new_image = PostImage(url=url, order=0, post_id=post_id)
+                db.session.add(new_image)
     else:
         data = request.get_json()
 
@@ -115,8 +121,8 @@ def update_post(post_id):
         post.resolved_instagram = data["resolved_instagram"]
     if "resolved_link" in data:
         # valido que el link tenga formato de URL
-        if data["resolved_link"] and not re.match(r'^https?://.+', data["resolved_link"]):
-            return jsonify({"error": "El link debe empezar con http:// o https://"}), 400
+        if data["resolved_link"] and not re.match(r'^https://.+', data["resolved_link"]):
+            return jsonify({"error": "El link debe empezar con https://"}), 400
         post.resolved_link = data["resolved_link"]
 
     db.session.commit()
