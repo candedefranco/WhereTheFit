@@ -85,6 +85,12 @@ function PostDetail() {
     e.preventDefault()
     setError("")
 
+    // valido que el link tenga formato correcto si lo pusieron
+    if (newLink && !/^https:\/\/.+/.test(newLink)) {
+      setError("El link debe empezar con https://")
+      return
+    }
+
     // mando el comentario al back, con parent_id si es una respuesta
     const response = await apiFetch(`/comments/${id}`, {
       method: "POST",
