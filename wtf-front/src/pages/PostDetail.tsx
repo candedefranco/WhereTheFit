@@ -222,11 +222,12 @@ async function confirmDeleteComment() {
                       onChange={(e) => setResolvedLink(e.target.value)}
                       style={{ marginBottom: "12px" }}
                     />
+                    {error && <p className="error" style={{ marginBottom: "8px" }}>{error}</p>}
                     <button
                       onClick={async () => {
                         // valido que el link tenga formato correcto
                         if (resolvedLink && !/^https:\/\/.+/.test(resolvedLink)) {
-                          alert("El link debe empezar con https://")
+                          setError("El link debe empezar con https://")
                           return
                         }
                         await apiFetch(`/posts/${post.id}`, {
@@ -361,7 +362,6 @@ async function confirmDeleteComment() {
             </form>
           )}
 
-          {error && <p className="error">{error}</p>}
         </div>
       </div>
 
