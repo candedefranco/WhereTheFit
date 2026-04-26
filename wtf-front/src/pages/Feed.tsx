@@ -130,8 +130,12 @@ async function confirmDelete() {
                     </span>
                   </div>
                   {/* meta info del post */}
-                  <p className="post-meta">@{post.username} · {new Date(post.created_at).toLocaleDateString("es-AR")}</p>
-                  {post.category && <p className="post-category">{post.category}</p>}
+                  <p className="post-meta">
+                      <a href={`/profile/${post.user_id}`} style={{ textDecoration: "none", color: "inherit", fontWeight: 600 }}>@{post.username}</a>
+                      {" · "}
+                      {new Date(post.created_at).toLocaleDateString("es-AR")}
+                    </p>
+                    {post.category && <p className="post-category">{post.category}</p>}
 
                   {/* muestro los tags si es que vienen desde el backend */}
                   {post.tags && post.tags.length > 0 && (

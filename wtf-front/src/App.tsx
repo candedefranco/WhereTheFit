@@ -7,6 +7,7 @@ import CreatePost from "./pages/CreatePost"
 import Feed from "./pages/Feed"
 import EditPost from "./pages/EditPost"
 import PostDetail from "./pages/PostDetail"
+import UserProfile from "./pages/UserProfile"
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
         <Route path="/feed/post/:id" element={<PostDetail />} />
         {/* cualquier ruta desconocida va al inicio */}
         <Route path="*" element={<Navigate to="/" />} />
+        <Route path="/profile/:id" element={<UserProfile />} />
       </Routes>
     </BrowserRouter>
   )

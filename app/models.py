@@ -171,3 +171,30 @@ class PostImage(db.Model):
             "order": self.order,
             "post_id": self.post_id,
         }
+
+class Follow(db.Model):
+        __tablename__ = "follows"
+
+        # id unico autogenerado
+        id = db.Column(db.Integer, primary_key=True)
+
+        # id del usuario que sigue
+        follower_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+
+        # id del usuario seguido
+        followed_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+
+        # fecha de creacion
+        created_at = db.Column(db.DateTime, server_default=db.func.now())
+
+        # relaciones
+        follower = db.relationship("User", foreign_keys=[follower_id], backref="following")
+        followed = db.relationship("User", foreign_keys=[followed_id], backref="followers")
+
+        def to_dict(self):
+            return {
+                "id": self.id,
+                "follower_id": self.follower_id,
+                "followed_id": self.followed_id,
+                "created_at": self.created_at.isoformat(),
+            }
