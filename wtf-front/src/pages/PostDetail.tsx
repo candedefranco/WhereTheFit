@@ -76,10 +76,9 @@ function PostDetail() {
     if (!currentUser) {
       navigate("/login")
       return
-
+    }
     loadPost()
     loadComments()
-      }
   }, [])
 
   async function handleComment(e: React.FormEvent) {
@@ -231,7 +230,7 @@ async function confirmDeleteComment() {
                           setError("El link debe empezar con https://")
                           return
                         }
-                        await apiFetch(`/posts/${post?.id}`, {
+                        await apiFetch(`/posts/${post.id}`, {
                           method: "PUT",
                           body: JSON.stringify({
                             status: "resolved",
