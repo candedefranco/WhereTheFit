@@ -18,28 +18,44 @@ function Profile() {
   const navigate = useNavigate()
   const [posts, setPosts] = useState<Post[]>([])
 
+  // estados para los contadores de follows
+  const [followersCount, setFollowersCount] = useState<number>(0)
+  const [followingCount, setFollowingCount] = useState<number>(0)
+
   // traigo el usuario logueado del localStorage
   const currentUser = JSON.parse(localStorage.getItem("user") || "null")
 
-  async function loadUserPosts() {
-    // traigo todos los posts del usuario logueado
-    const response = await apiFetch(`/posts/user/${currentUser.id}`)
-    const data = await response.json()
-    setPosts(data)
-  }
-
-  // si no hay sesion, mando al login
+    // si no hay sesion, mando al login
   useEffect(() => {
     if (!currentUser) {
       navigate("/login")
       return
     }
-    loadUserPosts()
+
+  async function loadProfileData() {
+    // traigo los posts del usuario logueado
+    const postsRes = await apiFetch(`/posts/user/${currentUser.id}`)
+    const postsData = await postsRes.json()
+    setPosts(postsData)
+
+    // traigo mis seguidores
+    const followersRes = await apiFetch(`/follows/${currentUser.id}/followers`)
+    const followersData = await followersRes.json()
+    setFollowersCount(followersData.length)
+
+    // traigo a los que sigo
+    const followingRes = await apiFetch(`/follows/${currentUser.id}/following`)
+    const followingData = await followingRes.json()
+    setFollowingCount(followingData.length)
+  }
+
+
+    loadProfileData()
   }, [])
 
   if (!currentUser) return null
 
-  return (
+return (
     <Layout>
       <div className="container">
         {/* datos del perfil */}
@@ -52,6 +68,13 @@ function Profile() {
             <p><strong>Username:</strong> {currentUser.username}</p>
             <p><strong>Email:</strong> {currentUser.email}</p>
             <p><strong>Miembro desde:</strong> {new Date(currentUser.created_at).toLocaleDateString("es-AR")}</p>
+          </div>
+
+          {/* barra de estadisticas de follows */}
+          <div style={{ display: "flex", gap: "24px", marginTop: "16px", paddingTop: "16px", borderTop: "1px solid #eee" }}>
+            <p><strong>{followersCount}</strong> seguidores</p>
+            <p><strong>{followingCount}</strong> seguidos</p>
+            <p><strong>{posts.length}</strong> publicaciones</p>
           </div>
         </div>
 
