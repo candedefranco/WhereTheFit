@@ -543,3 +543,7 @@ select:focus {
   border-radius: 20px;
   font-weight: 500;
 }
+.comment-username:hover {
+  color: #007bff !important;
+  text-decoration: underline !important;
+}
