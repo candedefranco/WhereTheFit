@@ -103,7 +103,7 @@ function Profile() {
           {listType !== null ? (
             <div style={{ marginTop: "16px", padding: "16px", backgroundColor: "#f9f9f9", borderRadius: "8px", border: "1px solid #eee" }}>
               <h4 style={{ margin: "0 0 12px 0", color: "#333" }}>
-                {listType === "followers" ? "Mis Seguidores" : "Mis seguidos"}
+                {listType === "followers" ? "Mis Seguidores" : "Mis Seguidos"}
               </h4>
 
               {/* mapeo a los usuarios de la lista seleccionada */}

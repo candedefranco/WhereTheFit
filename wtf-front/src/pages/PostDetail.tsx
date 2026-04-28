@@ -76,9 +76,10 @@ function PostDetail() {
     if (!currentUser) {
       navigate("/login")
       return
-    }
+
     loadPost()
     loadComments()
+      }
   }, [])
 
   async function handleComment(e: React.FormEvent) {
@@ -230,7 +231,7 @@ async function confirmDeleteComment() {
                           setError("El link debe empezar con https://")
                           return
                         }
-                        await apiFetch(`/posts/${post.id}`, {
+                        await apiFetch(`/posts/${post?.id}`, {
                           method: "PUT",
                           body: JSON.stringify({
                             status: "resolved",
@@ -264,12 +265,15 @@ async function confirmDeleteComment() {
             rootComments.map(comment => (
               <div key={comment.id} className="comment">
                 <div className="comment-header">
-                  <span className="comment-username">@{comment.username}</span>
+                  <a href={`/profile/${comment.user_id}`} className="comment-username"
+                     style={{textDecoration: "none", fontWeight: "bold", color: "inherit"}}>
+                    @{comment.username}
+                  </a>
                   <span className="comment-date">{new Date(comment.created_at).toLocaleDateString("es-AR")}</span>
                 </div>
                 <p className="comment-text">{comment.text}</p>
                 {comment.link && (
-                  <a href={comment.link} target="_blank" rel="noreferrer" className="comment-link">
+                    <a href={comment.link} target="_blank" rel="noreferrer" className="comment-link">
                     {comment.link}
                   </a>
                 )}
