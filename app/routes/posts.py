@@ -33,6 +33,27 @@ def get_user_posts(user_id):
     posts = Post.query.filter_by(user_id=user_id).order_by(Post.created_at.desc()).all()
     return jsonify([p.to_dict() for p in posts]), 200
 
+# POST /posts/suggest-tags → sugiere tags con Gemini a partir de una imagen y descripcion
+@posts_bp.route("/suggest-tags", methods=["POST"])
+@jwt_required()
+def suggest_tags():
+    # verifico que venga una imagen
+    if "image" not in request.files:
+        return jsonify({"error": "Se requiere una imagen"}), 400
+
+    file = request.files["image"]
+    description = request.form.get("description", "")
+
+    # leo los bytes de la imagen
+    image_bytes = file.read()
+    mime_type = file.content_type
+
+    # llamo a Gemini para sugerir tags
+    from app.services.gemini import suggest_tags as gemini_suggest
+    tags = gemini_suggest(image_bytes, mime_type, description)
+
+    return jsonify({"tags": tags}), 200
+
 # POST /posts → crea un post nuevo
 @posts_bp.route("", methods=["POST"])
 @jwt_required()
