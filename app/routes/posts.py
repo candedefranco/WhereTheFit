@@ -5,47 +5,61 @@ from app import db
 from app.models import Post
 from app.services.s3 import upload_image
 
-# todas las rutas de aca van a empezar con /posts
 posts_bp = Blueprint("posts", __name__, url_prefix="/posts")
 
 
 # GET /posts → devuelve todos los posts ordenados por fecha
 @posts_bp.route("", methods=["GET"])
 def get_posts():
-    # traigo todos los posts ordenados del mas nuevo al mas viejo
     posts = Post.query.order_by(Post.created_at.desc()).all()
+    return jsonify([p.to_dict() for p in posts]), 200
+
+
+# POST /posts/suggest-tags → sugiere tags con Gemini (tiene que ir antes de /<int:post_id>)
+@posts_bp.route("/suggest-tags", methods=["POST"])
+@jwt_required()
+def suggest_tags():
+    if "image" not in request.files:
+        return jsonify({"error": "Se requiere una imagen"}), 400
+
+    file = request.files["image"]
+    description = request.form.get("description", "")
+
+    image_bytes = file.read()
+    mime_type = file.content_type
+
+    from app.services.gemini import suggest_tags as gemini_suggest
+    tags = gemini_suggest(image_bytes, mime_type, description)
+
+    return jsonify({"tags": tags}), 200
+
+
+# GET /posts/user/<user_id> → devuelve todos los posts de un usuario
+@posts_bp.route("/user/<int:user_id>", methods=["GET"])
+def get_user_posts(user_id):
+    posts = Post.query.filter_by(user_id=user_id).order_by(Post.created_at.desc()).all()
     return jsonify([p.to_dict() for p in posts]), 200
 
 
 # GET /posts/<id> → devuelve un post especifico por su ID
 @posts_bp.route("/<int:post_id>", methods=["GET"])
 def get_post(post_id):
-    # busco el post por ID
     post = db.session.get(Post, post_id)
     if not post:
         return jsonify({"error": "Publicación no encontrada"}), 404
     return jsonify(post.to_dict()), 200
 
-# GET /posts/user/<user_id> → devuelve todos los posts de un usuario
-@posts_bp.route("/user/<int:user_id>", methods=["GET"])
-def get_user_posts(user_id):
-    # traigo todos los posts del usuario (activos y resueltos)
-    posts = Post.query.filter_by(user_id=user_id).order_by(Post.created_at.desc()).all()
-    return jsonify([p.to_dict() for p in posts]), 200
 
 # POST /posts → crea un post nuevo
 @posts_bp.route("", methods=["POST"])
 @jwt_required()
 def create_post():
-    # obtengo el ID del usuario logueado desde el token
     current_user_id = int(get_jwt_identity())
     data = request.form
 
-    # verifico que esten los campos obligatorios
     if not data.get("title") or not data.get("description"):
         return jsonify({"error": "Titulo y descripcion son obligatorios"}), 400
 
-    # creo el post
     post = Post(
         title=data["title"],
         description=data["description"],
@@ -55,9 +69,8 @@ def create_post():
     )
 
     db.session.add(post)
-    db.session.flush()  # consigo el id del post antes del commit
+    db.session.flush()
 
-    # subo hasta 3 imagenes a S3
     from app.models import PostImage
     files = request.files.getlist("images")
     for i, file in enumerate(files[:3]):
@@ -74,37 +87,29 @@ def create_post():
 @posts_bp.route("/<int:post_id>", methods=["PUT"])
 @jwt_required()
 def update_post(post_id):
-    # obtengo el ID del usuario logueado
     current_user_id = int(get_jwt_identity())
 
-    # busco el post por ID
     post = db.session.get(Post, post_id)
     if not post:
         return jsonify({"error": "Publicación no encontrada"}), 404
 
-    # verifico que el post le pertenezca al usuario logueado
     if post.user_id != current_user_id:
         return jsonify({"error": "No podés editar una publicación que no es tuya"}), 403
 
-    # acepto tanto FormData como JSON
     if request.content_type and "multipart/form-data" in request.content_type:
         data = request.form
 
-        # si viene una imagen nueva, la subo a S3 y reemplazo las imagenes del post
         if "image" in request.files:
             file = request.files["image"]
             if file.filename != "":
                 from app.models import PostImage
-                # borro las imagenes viejas
                 PostImage.query.filter_by(post_id=post_id).delete()
-                # subo la nueva imagen a S3
                 url = upload_image(file)
                 new_image = PostImage(url=url, order=0, post_id=post_id)
                 db.session.add(new_image)
     else:
         data = request.get_json()
 
-    # actualizo solo los campos que vinieron en el body
     if "title" in data:
         post.title = data["title"]
     if "description" in data:
@@ -120,13 +125,13 @@ def update_post(post_id):
     if "resolved_instagram" in data:
         post.resolved_instagram = data["resolved_instagram"]
     if "resolved_link" in data:
-        # valido que el link tenga formato de URL
         if data["resolved_link"] and not re.match(r'^https://.+', data["resolved_link"]):
             return jsonify({"error": "El link debe empezar con https://"}), 400
         post.resolved_link = data["resolved_link"]
 
     db.session.commit()
     return jsonify(post.to_dict()), 200
+
 
 # DELETE /posts/<id> → borra un post por su ID
 @posts_bp.route("/<int:post_id>", methods=["DELETE"])
@@ -141,7 +146,6 @@ def delete_post(post_id):
     if post.user_id != current_user_id:
         return jsonify({"error": "No podés borrar una publicación que no es tuya"}), 403
 
-    # borro las imagenes, comentarios y despues el post
     from app.models import Comment, PostImage
     PostImage.query.filter_by(post_id=post_id).delete()
     Comment.query.filter_by(post_id=post_id).delete()
