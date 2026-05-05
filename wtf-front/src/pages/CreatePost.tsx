@@ -15,6 +15,10 @@ function CreatePost() {
   const [customTag, setCustomTag] = useState("")
   const predefinedTags = ["Vintage", "Streetwear", "Coquette", "Old Money", "Aesthetic", "Minimalist"]
 
+  // estados para Gemini
+  const [suggestedTags, setSuggestedTags] = useState<string[]>([])
+  const [isSuggesting, setIsSuggesting] = useState(false)
+
   const navigate = useNavigate()
 
   // traigo el usuario logueado del localStorage
@@ -47,7 +51,54 @@ function CreatePost() {
       setCustomTag("")
     }
   }
+  async function handleSuggestTags(e: React.MouseEvent) {
+    e.preventDefault()
+    setError("")
 
+    if (imageFiles.length === 0) {
+      setError("Subí al menos una imagen para que la IA la analice.")
+      return
+    }
+
+    setIsSuggesting(true)
+
+    const formData = new FormData()
+    formData.append("image", imageFiles[0]) // mandamos la primera imagen
+    formData.append("description", description)
+
+    try {
+      const token = localStorage.getItem("token")
+      const response = await fetch("http://localhost:5001/posts/suggest-tags", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        // filtramos para que no sugiera tags que ya tenés seleccionados
+        const newSuggestions = data.tags.filter((t: string) => !tags.includes(t))
+        setSuggestedTags(newSuggestions)
+      } else {
+        setError(data.error || "Error al sugerir tags")
+      }
+    } catch (err) {
+      setError("Error de conexión con la IA")
+    } finally {
+      setIsSuggesting(false)
+    }
+  }
+
+  // funcion para pasar un tag de "sugerido" a "seleccionado"
+  const acceptSuggestedTag = (tag: string) => {
+    if (!tags.includes(tag) && tags.length < 5) {
+      setTags([...tags, tag])
+    }
+    setSuggestedTags(suggestedTags.filter(t => t !== tag))
+  }
 async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError("")
@@ -173,6 +224,39 @@ async function handleSubmit(e: React.FormEvent) {
               }}
             />
           </div>
+            {/* seccion gemini */}
+            <div style={{ marginTop: "12px", marginBottom: "16px" }}>
+              <button
+                onClick={handleSuggestTags}
+                disabled={imageFiles.length === 0 || isSuggesting}
+                type="button"
+                style={{
+                  width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #d8b4fe",
+                  backgroundColor: "#f0e6ff", color: "#6b21a8", fontWeight: "bold", cursor: imageFiles.length === 0 ? "not-allowed" : "pointer"
+                }}
+              >
+                {isSuggesting ? "Pensando..." : "✨ Sugerir tags con IA (requiere subir imagen)"}
+              </button>
+            </div>
+
+            {suggestedTags.length > 0 ? (
+              <div style={{ marginBottom: "16px", padding: "12px", backgroundColor: "#f8fafc", borderRadius: "8px", border: "1px dashed #cbd5e1" }}>
+                <p style={{ fontSize: "13px", color: "#64748b", marginBottom: "8px", fontWeight: 600 }}>
+                  Sugerencias de IA (clic para agregar):
+                </p>
+                <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                  {suggestedTags.map((tag, i) => (
+                    <span
+                      key={i}
+                      onClick={() => acceptSuggestedTag(tag)}
+                      style={{ padding: "4px 12px", backgroundColor: "#e2e8f0", color: "#334155", borderRadius: "16px", cursor: "pointer", fontSize: "13px" }}
+                    >
+                      + {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : null}
             <div className="btn-row">
               <button type="submit" className="btn">Publicar</button>
               <a href="/feed" className="btn btn-secondary">Cancelar</a>
