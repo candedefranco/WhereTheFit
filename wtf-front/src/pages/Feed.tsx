@@ -3,10 +3,8 @@ import { useNavigate } from "react-router-dom"
 import Layout from "../components/Layout"
 import { apiFetch } from "../api"
 import ConfirmModal from "../components/ConfirmModal"
-
 import Masonry from "react-masonry-css"
 
-// defino el tipo Post para TypeScript
 interface Post {
   id: number
   title: string
@@ -14,7 +12,7 @@ interface Post {
   category: string | null
   image_url: string | null
   images: { id: number; url: string; order: number }[]
-  tags?: string[] // lo agregamos como opcional para que no rompa si el back no lo manda
+  tags?: string[]
   status: string
   created_at: string
   user_id: number
@@ -22,30 +20,25 @@ interface Post {
 }
 
 function Feed() {
-  // estado para guardar la lista de posts
   const [posts, setPosts] = useState<Post[]>([])
   const [error, setError] = useState("")
+  const [showModal, setShowModal] = useState(false)
+  const [postToDelete, setPostToDelete] = useState<number | null>(null)
   const navigate = useNavigate()
 
-  // traigo el usuario logueado del localStorage
   const currentUser = JSON.parse(localStorage.getItem("user") || "null")
 
-  // estados para el modal de confirmacion
-const [showModal, setShowModal] = useState(false)
-const [postToDelete, setPostToDelete] = useState<number | null>(null)
-
-  // si no hay sesion, mando al login
   useEffect(() => {
     if (!currentUser) {
       navigate("/login")
-    } else {
-      loadPosts()
+      return
     }
+    loadPosts()
   }, [])
 
-async function loadPosts() {
-    // traigo todos los posts del back
-    const response = await apiFetch("/posts")
+  async function loadPosts() {
+    const params = new URLSearchParams(window.location.search)
+    const response = await apiFetch(`/posts?${params.toString()}`)
     if (!response.ok) {
       setError("Error al cargar las publicaciones")
       return
@@ -54,13 +47,12 @@ async function loadPosts() {
     setPosts(data)
   }
 
-async function deletePost(id: number) {
-    // muestro el modal en vez del confirm nativo
+  async function deletePost(id: number) {
     setPostToDelete(id)
     setShowModal(true)
   }
 
-async function confirmDelete() {
+  async function confirmDelete() {
     if (!postToDelete) return
 
     const response = await apiFetch(`/posts/${postToDelete}`, {
@@ -77,7 +69,6 @@ async function confirmDelete() {
     }
   }
 
-  // configuracion de columnas para el diseño masonry estilo pinterest
   const breakpointColumnsObj = {
     default: 5,
     1400: 4,
@@ -99,7 +90,6 @@ async function confirmDelete() {
             <p>No hay publicaciones todavía. ¡Sé la primera en publicar!</p>
           </div>
         ) : (
-          // muestro cada post como una card usando Masonry
           <Masonry
             breakpointCols={breakpointColumnsObj}
             className="my-masonry-grid"
@@ -107,7 +97,6 @@ async function confirmDelete() {
           >
             {posts.map(post => (
               <div key={post.id} className="card post-card feed-card">
-                {/* muestro la primera imagen si existe */}
                 {(post.images?.[0]?.url || post.image_url) && (
                   <a href={`/feed/post/${post.id}`}>
                     <img
@@ -120,24 +109,22 @@ async function confirmDelete() {
                 <div className="post-content feed-content">
                   <div className="post-header">
                     <h3>
-                       <a href={`/feed/post/${post.id}`} style={{ textDecoration: "none", color: "inherit" }}>
-                          {post.title}
+                      <a href={`/feed/post/${post.id}`} style={{ textDecoration: "none", color: "inherit" }}>
+                        {post.title}
                       </a>
                     </h3>
-                    {/* badge que muestra el estado del post */}
                     <span className={`status-badge ${post.status}`}>
                       {post.status === "active" ? "En búsqueda" : "Resuelto"}
                     </span>
                   </div>
-                  {/* meta info del post */}
                   <p className="post-meta">
-                      <a href={`/profile/${post.user_id}`} style={{ textDecoration: "none", color: "inherit", fontWeight: 600 }}>@{post.username}</a>
-                      {" · "}
-                      {new Date(post.created_at).toLocaleDateString("es-AR")}
-                    </p>
-                    {post.category && <p className="post-category">{post.category}</p>}
-
-                  {/* muestro los tags si es que vienen desde el backend */}
+                    <a href={`/profile/${post.user_id}`} style={{ textDecoration: "none", color: "inherit", fontWeight: 600 }}>
+                      @{post.username}
+                    </a>
+                    {" · "}
+                    {new Date(post.created_at).toLocaleDateString("es-AR")}
+                  </p>
+                  {post.category && <p className="post-category">{post.category}</p>}
                   {post.tags && post.tags.length > 0 && (
                     <div className="post-tags-list">
                       {post.tags.map((tag, index) => (
@@ -145,10 +132,7 @@ async function confirmDelete() {
                       ))}
                     </div>
                   )}
-
                   <p className="post-description truncate-text">{post.description}</p>
-
-                  {/* solo muestro acciones si el post es del usuario logueado */}
                   {currentUser && currentUser.id === post.user_id && (
                     <div className="btn-row" style={{ marginTop: "12px" }}>
                       <a href={`/feed/edit/${post.id}`} className="btn btn-small">Editar</a>
@@ -164,7 +148,6 @@ async function confirmDelete() {
         {error && <p className="error">{error}</p>}
       </div>
 
-      {/* modal de confirmacion de borrado */}
       {showModal && (
         <ConfirmModal
           message="¿Segura que querés borrar esta publicación?"
@@ -172,7 +155,7 @@ async function confirmDelete() {
           onCancel={() => { setShowModal(false); setPostToDelete(null) }}
         />
       )}
-</Layout>
+    </Layout>
   )
 }
 

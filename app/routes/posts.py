@@ -8,10 +8,37 @@ from app.services.s3 import upload_image
 posts_bp = Blueprint("posts", __name__, url_prefix="/posts")
 
 
-# GET /posts → devuelve todos los posts ordenados por fecha
+# GET /posts → devuelve todos los posts, con filtros opcionales
 @posts_bp.route("", methods=["GET"])
 def get_posts():
-    posts = Post.query.order_by(Post.created_at.desc()).all()
+    query = Post.query
+
+    # filtro por categoria
+    category = request.args.get("category")
+    if category:
+        query = query.filter(Post.category.ilike(f"%{category}%"))
+
+    # filtro por tags
+    tag = request.args.get("tag")
+    if tag:
+        query = query.filter(Post.tags.ilike(f"%{tag}%"))
+
+    # filtro por texto libre en titulo o descripcion
+    search = request.args.get("search")
+    if search:
+        query = query.filter(
+            db.or_(
+                Post.title.ilike(f"%{search}%"),
+                Post.description.ilike(f"%{search}%")
+            )
+        )
+
+    # filtro por estado
+    status = request.args.get("status")
+    if status:
+        query = query.filter(Post.status == status)
+
+    posts = query.order_by(Post.created_at.desc()).all()
     return jsonify([p.to_dict() for p in posts]), 200
 
 
