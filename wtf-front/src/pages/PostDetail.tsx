@@ -20,6 +20,8 @@ interface Post {
   resolved_location: string | null
   resolved_instagram: string | null
   resolved_link: string | null
+  likes: number
+  liked_by: number[]
 }
 
 interface Comment {
@@ -37,41 +39,35 @@ function PostDetail() {
   const [comments, setComments] = useState<Comment[]>([])
   const [newComment, setNewComment] = useState("")
   const [newLink, setNewLink] = useState("")
-  // guardo el id del comentario al que estoy respondiendo
   const [replyingTo, setReplyingTo] = useState<number | null>(null)
   const [error, setError] = useState("")
-  const navigate = useNavigate()
-  // estados para el modal de confirmacion de comentarios
   const [showCommentModal, setShowCommentModal] = useState(false)
   const [commentToDelete, setCommentToDelete] = useState<number | null>(null)
-
-  // obtengo el id del post de la URL (ej: /feed/post/3)
-  const { id } = useParams()
-
-  // traigo el usuario logueado del localStorage
-  const currentUser = JSON.parse(localStorage.getItem("user") || "null")
-
-  // estados para marcar como resuelto
   const [showResolveForm, setShowResolveForm] = useState(false)
   const [resolvedLocation, setResolvedLocation] = useState("")
   const [resolvedInstagram, setResolvedInstagram] = useState("")
   const [resolvedLink, setResolvedLink] = useState("")
+  const [likes, setLikes] = useState<number>(0)
+  const [liked, setLiked] = useState<boolean>(false)
+
+  const navigate = useNavigate()
+  const { id } = useParams()
+  const currentUser = JSON.parse(localStorage.getItem("user") || "null")
 
   async function loadPost() {
-    // traigo los datos del post
     const response = await apiFetch(`/posts/${id}`)
     const data = await response.json()
     setPost(data)
+    setLikes(data.likes)
+    setLiked(data.liked_by.includes(currentUser.id))
   }
 
   async function loadComments() {
-    // traigo los comentarios del post
     const response = await apiFetch(`/comments/${id}`)
     const data = await response.json()
     setComments(data)
   }
 
-  // si no hay sesion, mando al login
   useEffect(() => {
     if (!currentUser) {
       navigate("/login")
@@ -81,17 +77,27 @@ function PostDetail() {
     loadComments()
   }, [])
 
+  async function handleLike() {
+    if (liked) {
+      await apiFetch(`/likes/${id}`, { method: "DELETE" })
+      setLiked(false)
+      setLikes(likes - 1)
+    } else {
+      await apiFetch(`/likes/${id}`, { method: "POST" })
+      setLiked(true)
+      setLikes(likes + 1)
+    }
+  }
+
   async function handleComment(e: React.FormEvent) {
     e.preventDefault()
     setError("")
 
-    // valido que el link tenga formato correcto si lo pusieron
     if (newLink && !/^https:\/\/.+/.test(newLink)) {
       setError("El link debe empezar con https://")
       return
     }
 
-    // mando el comentario al back, con parent_id si es una respuesta
     const response = await apiFetch(`/comments/${id}`, {
       method: "POST",
       body: JSON.stringify({
@@ -104,7 +110,6 @@ function PostDetail() {
     const data = await response.json()
 
     if (response.ok) {
-      // limpio el formulario y cancelo la respuesta
       setNewComment("")
       setNewLink("")
       setReplyingTo(null)
@@ -114,40 +119,35 @@ function PostDetail() {
     }
   }
 
-async function deleteComment(commentId: number) {
-  // muestro el modal en vez del confirm nativo
-  setCommentToDelete(commentId)
-  setShowCommentModal(true)
-}
-
-async function confirmDeleteComment() {
-  if (!commentToDelete) return
-
-  const response = await apiFetch(`/comments/${commentToDelete}`, {
-    method: "DELETE",
-  })
-
-  setShowCommentModal(false)
-  setCommentToDelete(null)
-
-  if (response.ok) {
-    loadComments()
+  async function deleteComment(commentId: number) {
+    setCommentToDelete(commentId)
+    setShowCommentModal(true)
   }
-}
 
-  // separo los comentarios raiz de las respuestas
+  async function confirmDeleteComment() {
+    if (!commentToDelete) return
+
+    const response = await apiFetch(`/comments/${commentToDelete}`, {
+      method: "DELETE",
+    })
+
+    setShowCommentModal(false)
+    setCommentToDelete(null)
+
+    if (response.ok) {
+      loadComments()
+    }
+  }
+
   const rootComments = comments.filter(c => c.parent_id === null)
   const getReplies = (commentId: number) => comments.filter(c => c.parent_id === commentId)
 
   if (!post) return null
 
-
   return (
     <Layout>
       <div className="container">
-        {/* detalle del post */}
         <div className="card post-card">
-          {/* carrusel de imagenes del post */}
           {post.images && post.images.length > 0 ? (
             <ImageCarousel images={post.images} title={post.title} />
           ) : post.image_url ? (
@@ -160,13 +160,30 @@ async function confirmDeleteComment() {
                 {post.status === "active" ? "En búsqueda" : "Resuelto"}
               </span>
             </div>
-            <p className="post-meta">@{post.username} · {new Date(post.created_at).toLocaleDateString("es-AR")}</p>
+            <p className="post-meta">
+              <a href={`/profile/${post.user_id}`} style={{ textDecoration: "none", color: "inherit", fontWeight: 600 }}>
+                @{post.username}
+              </a>
+              {" · "}
+              {new Date(post.created_at).toLocaleDateString("es-AR")}
+            </p>
+
+            {/* boton de like */}
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "8px" }}>
+              <button
+                onClick={handleLike}
+                className={`btn btn-small ${liked ? "btn-danger" : "btn-secondary"}`}
+              >
+                {liked ? "❤️" : "🤍"} {likes} {likes === 1 ? "like" : "likes"}
+              </button>
+            </div>
+
             {post.description && (
-              <div className="post-detail-description" style={{ marginTop: '16px', color: '#444', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>
+              <div className="post-detail-description" style={{ marginTop: "16px", color: "#444", lineHeight: "1.5", whiteSpace: "pre-wrap" }}>
                 <p>{post.description}</p>
               </div>
             )}
-            {/* muestro donde se encontro la prenda si el post esta resuelto */}
+
             {post.status === "resolved" && (post.resolved_location || post.resolved_instagram || post.resolved_link) && (
               <div style={{ marginTop: "12px", padding: "12px", backgroundColor: "#e8f5e9", borderRadius: "8px" }}>
                 <p style={{ fontWeight: 600, color: "#2e7d32", marginBottom: "8px" }}>✓ Encontrado en:</p>
@@ -180,12 +197,10 @@ async function confirmDeleteComment() {
               </div>
             )}
 
-            {/* botones solo para el dueno del post */}
             {currentUser && currentUser.id === post.user_id && (
               <div style={{ marginTop: "12px" }}>
                 <div className="btn-row">
                   <a href={`/feed/edit/${post.id}`} className="btn btn-small">Editar</a>
-                  {/* solo muestro el boton si el post esta activo */}
                   {post.status === "active" && (
                     <button
                       onClick={() => setShowResolveForm(!showResolveForm)}
@@ -197,7 +212,6 @@ async function confirmDeleteComment() {
                   )}
                 </div>
 
-                {/* formulario para marcar como resuelto */}
                 {showResolveForm && (
                   <div style={{ marginTop: "12px", padding: "16px", backgroundColor: "#f9f9f9", borderRadius: "8px" }}>
                     <p style={{ fontWeight: 600, marginBottom: "12px" }}>¿Dónde lo encontraste?</p>
@@ -225,7 +239,6 @@ async function confirmDeleteComment() {
                     {error && <p className="error" style={{ marginBottom: "8px" }}>{error}</p>}
                     <button
                       onClick={async () => {
-                        // valido que el link tenga formato correcto
                         if (resolvedLink && !/^https:\/\/.+/.test(resolvedLink)) {
                           setError("El link debe empezar con https://")
                           return
@@ -254,7 +267,6 @@ async function confirmDeleteComment() {
           </div>
         </div>
 
-        {/* seccion de comentarios */}
         <div className="card" style={{ marginTop: "16px" }}>
           <h3 style={{ marginBottom: "16px" }}>Comentarios ({comments.length})</h3>
 
@@ -265,20 +277,19 @@ async function confirmDeleteComment() {
               <div key={comment.id} className="comment">
                 <div className="comment-header">
                   <a href={`/profile/${comment.user_id}`} className="comment-username"
-                     style={{textDecoration: "none", fontWeight: "bold", color: "inherit"}}>
+                    style={{ textDecoration: "none", fontWeight: "bold", color: "inherit" }}>
                     @{comment.username}
                   </a>
                   <span className="comment-date">{new Date(comment.created_at).toLocaleDateString("es-AR")}</span>
                 </div>
                 <p className="comment-text">{comment.text}</p>
                 {comment.link && (
-                    <a href={comment.link} target="_blank" rel="noreferrer" className="comment-link">
+                  <a href={comment.link} target="_blank" rel="noreferrer" className="comment-link">
                     {comment.link}
                   </a>
                 )}
 
                 <div className="btn-row" style={{ marginTop: "8px" }}>
-                  {/* boton para responder este comentario */}
                   <button
                     onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
                     className="btn btn-small btn-secondary"
@@ -286,7 +297,6 @@ async function confirmDeleteComment() {
                     {replyingTo === comment.id ? "Cancelar" : "Responder"}
                   </button>
 
-                  {/* solo muestro borrar si el comentario es del usuario logueado */}
                   {currentUser && currentUser.id === comment.user_id && (
                     <button onClick={() => deleteComment(comment.id)} className="btn btn-danger btn-small">
                       Borrar
@@ -294,7 +304,6 @@ async function confirmDeleteComment() {
                   )}
                 </div>
 
-                {/* formulario de respuesta inline */}
                 {replyingTo === comment.id && (
                   <form onSubmit={handleComment} style={{ marginTop: "12px", marginLeft: "16px" }}>
                     <textarea
@@ -311,7 +320,6 @@ async function confirmDeleteComment() {
                   </form>
                 )}
 
-                {/* respuestas anidadas del comentario */}
                 {getReplies(comment.id).map(reply => (
                   <div key={reply.id} className="comment comment-reply">
                     <div className="comment-header">
@@ -325,7 +333,6 @@ async function confirmDeleteComment() {
                       </a>
                     )}
                     <div className="btn-row" style={{ marginTop: "8px" }}>
-                      {/* responder a este hilo apunta al comentario raiz */}
                       <button
                         onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
                         className="btn btn-small btn-secondary"
@@ -344,7 +351,6 @@ async function confirmDeleteComment() {
             ))
           )}
 
-          {/* formulario para agregar comentario raiz */}
           {replyingTo === null && (
             <form onSubmit={handleComment} style={{ marginTop: "16px" }}>
               <textarea
@@ -357,7 +363,7 @@ async function confirmDeleteComment() {
               />
               <input
                 type="text"
-                placeholder="Link (opcional, ej: instagram.com/tienda)"
+                placeholder="Link (opcional, ej: https://tienda.com)"
                 value={newLink}
                 onChange={(e) => setNewLink(e.target.value)}
               />
@@ -365,10 +371,10 @@ async function confirmDeleteComment() {
             </form>
           )}
 
+          {error && <p className="error">{error}</p>}
         </div>
       </div>
 
-      {/* modal de confirmacion de borrado de comentario */}
       {showCommentModal && (
         <ConfirmModal
           message="¿Segura que querés borrar este comentario?"

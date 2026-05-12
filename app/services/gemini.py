@@ -1,14 +1,12 @@
 import os
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 
-# configuro la API key de Gemini
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+# creo el cliente con la API key
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 
 def suggest_tags(image_bytes: bytes, mime_type: str, description: str) -> list[str]:
-    # uso el modelo gemini-1.5-flash que soporta imagenes
-    model = genai.GenerativeModel("gemini-1.5-flash")
-
     # armo el prompt para que devuelva tags relevantes para moda argentina
     prompt = f"""
     Analizá esta imagen de ropa y la siguiente descripción: "{description}".
@@ -17,16 +15,19 @@ def suggest_tags(image_bytes: bytes, mime_type: str, description: str) -> list[s
     Los tags deben describir: tipo de prenda, color, estilo, o características visuales.
 
     Respondé ÚNICAMENTE con los tags separados por comas, sin hashtags, sin explicaciones.
-    Ejemplo: campera, cuero, negro, oversize, vintage, casamiento, monocromático, etc.
+    Ejemplo: campera, cuero, negro, oversize, vintage
     """
 
     # mando la imagen y el prompt a Gemini
-    response = model.generate_content([
-        {"mime_type": mime_type, "data": image_bytes},
-        prompt
-    ])
+    response = client.models.generate_content(
+        model="gemini-3.1-flash-lite",
+        contents=[
+            types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
+            prompt
+        ]
+    )
 
     # parseo la respuesta y devuelvo una lista de tags limpios
     raw = response.text.strip()
     tags = [tag.strip().lower() for tag in raw.split(",") if tag.strip()]
-    return tags[:10]  # maximo 10 tags
+    return tags[:10]

@@ -57,12 +57,15 @@ def create_app():
     from app.routes.comments import comments_bp
     # registro las rutas de los follows
     from app.routes.follows import follows_bp
+    # registro las rutas de los likes
+    from app.routes.likes import likes_bp
     # registro las rutas de las paginas HTML
     app.register_blueprint(users_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(posts_bp)
     app.register_blueprint(comments_bp)
     app.register_blueprint(follows_bp)
+    app.register_blueprint(likes_bp)
 
 
 
