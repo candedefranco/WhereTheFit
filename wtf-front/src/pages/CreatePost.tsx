@@ -99,6 +99,10 @@ function CreatePost() {
     }
     setSuggestedTags(suggestedTags.filter(t => t !== tag))
   }
+  // funcion para quitar una imagen de la lista de seleccion antes de publicar
+  const removeFile = (index: number) => {
+    setImageFiles(imageFiles.filter((_, i) => i !== index))
+  }
 async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError("")
@@ -214,6 +218,30 @@ async function handleSubmit(e: React.FormEvent) {
             <p style={{ fontSize: "13px", color: "#888", marginBottom: "6px" }}>
               {imageFiles.length > 0 ? `${imageFiles.length} imagen(es) seleccionada(s)` : "Subir imágenes (máximo 3)"}
             </p>
+              {/* VISTA PREVIA DE IMÁGENES SELECCIONADAS */}
+            {imageFiles.length > 0 && (
+              <div style={{ marginBottom: "15px", marginTop: "15px" }}>
+                <p style={{ fontSize: "13px", color: "#888", marginBottom: "8px" }}>Vista previa de tus fotos:</p>
+                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                  {imageFiles.map((file, index) => (
+                    <div key={index} style={{ position: "relative" }}>
+
+                      <img
+                        src={URL.createObjectURL(file)}
+                        style={{ width: "90px", height: "90px", objectFit: "cover", borderRadius: "8px", border: "2px dashed #6a9ea8" }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeFile(index)}
+                        style={{ position: "absolute", top: -5, right: -5, background: "gray", color: "white", borderRadius: "50%", border: "none", cursor: "pointer", width: "22px", height: "22px", fontSize: "12px" }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             <input
               type="file"
               accept="image/*"

@@ -177,18 +177,34 @@ def update_post(post_id):
 
     if request.content_type and "multipart/form-data" in request.content_type:
         data = request.form
+        from app.models import PostImage
 
-        if "image" in request.files:
-            file = request.files["image"]
-            if file.filename != "":
-                from app.models import PostImage
-                PostImage.query.filter_by(post_id=post_id).delete()
+        # borro solo las imagenes que el usuario marco con la X en el front
+        deleted_ids_raw = data.get("deleted_image_ids")
+        if deleted_ids_raw:
+            import json
+            try:
+                deleted_ids = json.loads(deleted_ids_raw)
+                if deleted_ids:
+                    PostImage.query.filter(PostImage.id.in_(deleted_ids)).delete(synchronize_session=False)
+            except:
+                pass
+
+        # subo las imagenes nuevas respetando el limite de 3
+        new_files = request.files.getlist("images")
+        current_count = PostImage.query.filter_by(post_id=post_id).count()
+
+        for file in new_files:
+            if current_count < 3 and file.filename != "":
                 url = upload_image(file)
-                new_image = PostImage(url=url, order=0, post_id=post_id)
+                new_image = PostImage(url=url, order=current_count, post_id=post_id)
                 db.session.add(new_image)
+                current_count += 1
     else:
+        # si es solo texto viene como JSON
         data = request.get_json()
 
+    # actualizo los campos de texto del post
     if "title" in data:
         post.title = data["title"]
     if "description" in data:
@@ -199,6 +215,8 @@ def update_post(post_id):
         post.status = data["status"]
     if "tags" in data:
         post.tags = data["tags"]
+
+    # campos de resolucion del post
     if "resolved_location" in data:
         post.resolved_location = data["resolved_location"]
     if "resolved_instagram" in data:
