@@ -8,8 +8,10 @@ function EditPost() {
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [category, setCategory] = useState("")
-  const [imageUrl, setImageUrl] = useState("")
-  const [imageFile, setImageFile] = useState<File | null>(null)
+  // estados para fotos viejas y nuevas
+  const [existingImages, setExistingImages] = useState<any[]>([]) // las que ya estan en el back
+  const [newFiles, setNewFiles] = useState<File[]>([]) // las que elegis ahora
+  const [deletedImageIds, setDeletedImageIds] = useState<number[]>([]) // IDs para borrar
   const [tags, setTags] = useState<string[]>([])
   const [customTag, setCustomTag] = useState("")
   const [error, setError] = useState("")
@@ -30,8 +32,10 @@ function EditPost() {
     setTitle(data.title)
     setDescription(data.description)
     setCategory(data.category || "")
-    setImageUrl(data.image_url || "")
-    // cargo los tags existentes del post
+    // cargo el array de imagenes del post
+    setExistingImages(data.images || [])
+
+    // cargo los tags existentes
     setTags(data.tags || [])
   }
 
@@ -43,6 +47,17 @@ function EditPost() {
     }
     loadPost()
   }, [])
+
+  // funcion para marcar una imagen de la DB para borrar
+  const removeExistingImage = (imageId: number) => {
+    setDeletedImageIds([...deletedImageIds, imageId])
+    setExistingImages(existingImages.filter(img => img.id !== imageId))
+  }
+
+  // funcion para quitar una imagen nueva antes de subirla
+  const removeNewFile = (index: number) => {
+    setNewFiles(newFiles.filter((_, i) => i !== index))
+  }
 
   // funcion para seleccionar/deseleccionar tags predefinidos
   const toggleTag = (tag: string) => {
@@ -70,35 +85,27 @@ function EditPost() {
     setError("")
 
     const token = localStorage.getItem("token")
+    const formData = new FormData()
 
-    // si hay imagen nueva, mando todo como FormData
-    if (imageFile) {
-      const formData = new FormData()
-      formData.append("title", title)
-      formData.append("description", description)
-      formData.append("category", category)
-      formData.append("tags", tags.join(","))
-      formData.append("image", imageFile)
+    // cargo los textos en el form
+    formData.append("title", title)
+    formData.append("description", description)
+    formData.append("category", category)
+    formData.append("tags", tags.join(","))
 
-      const response = await fetch(`http://localhost:5001/posts/${id}`, {
-        method: "PUT",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      })
+    // mando los IDs de las fotos que hay que borrar
+    formData.append("deleted_image_ids", JSON.stringify(deletedImageIds))
 
-      const data = await response.json()
-      if (response.ok) {
-        navigate("/feed")
-      } else {
-        setError(data.error)
-      }
-      return
-    }
+    // agrego los archivos nuevos al campo 'images'
+    newFiles.forEach((file) => {
+      formData.append("images", file)
+    })
 
-    // si no hay imagen nueva, mando solo JSON
-    const response = await apiFetch(`/posts/${id}`, {
+    // mando toodo por PUT
+    const response = await fetch(`http://localhost:5001/posts/${id}`, {
       method: "PUT",
-      body: JSON.stringify({ title, description, category, tags: tags.join(",") }),
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
     })
 
     const data = await response.json()
@@ -116,27 +123,10 @@ function EditPost() {
           <h2>Editar publicación</h2>
 
           <form onSubmit={handleSubmit}>
-            <input
-              type="text"
-              placeholder="Título"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
-            />
-            <textarea
-              placeholder="Descripción"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              required
-              rows={4}
-              maxLength={500}
-            />
+            <input type="text" placeholder="Título" value={title} onChange={(e) => setTitle(e.target.value)} required />
+            <textarea placeholder="Descripción" value={description} onChange={(e) => setDescription(e.target.value)} required rows={4} maxLength={500} />
 
-            {/* dropdown de categoria */}
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-            >
+            <select value={category} onChange={(e) => setCategory(e.target.value)}>
               <option value="">Seleccioná una categoría</option>
               <option value="Camperas">Camperas</option>
               <option value="Pantalones">Pantalones</option>
@@ -150,61 +140,62 @@ function EditPost() {
               <option value="Deportivo">Deportivo</option>
               <option value="Top">Top</option>
               <option value="Otro">Otro</option>
-
             </select>
 
-            {/* seccion de tags */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "14px" }}>
-              <label style={{ fontSize: "13px", fontWeight: 600, color: "#444", marginLeft: "4px" }}>Estilos (Tags)</label>
+            {/* tags */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", margin: "14px 0" }}>
+              <label style={{ fontSize: "13px", fontWeight: 600, color: "#444" }}>Estilos (Tags)</label>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                 {predefinedTags.map(tag => (
-                  <button
-                    key={tag}
-                    type="button"
-                    className={`tag-pill ${tags.includes(tag) ? "active" : ""}`}
-                    onClick={() => toggleTag(tag)}
-                  >
-                    #{tag}
-                  </button>
+                  <button key={tag} type="button" className={`tag-pill ${tags.includes(tag) ? "active" : ""}`} onClick={() => toggleTag(tag)}>#{tag}</button>
                 ))}
                 {tags.filter(t => !predefinedTags.includes(t)).map(tag => (
-                  <button
-                    key={tag}
-                    type="button"
-                    className="tag-pill active"
-                    onClick={() => toggleTag(tag)}
-                  >
-                    #{tag}
-                  </button>
+                  <button key={tag} type="button" className="tag-pill active" onClick={() => toggleTag(tag)}>#{tag}</button>
                 ))}
-                <input
-                  type="text"
-                  placeholder="+ nuevo"
-                  value={customTag}
-                  onChange={(e) => setCustomTag(e.target.value)}
-                  onKeyDown={addCustomTag}
-                  style={{ border: "1px dashed #6a9ea8", borderRadius: "20px", padding: "4px 12px", fontSize: "12px", width: "80px", outline: "none" }}
-                />
+                <input type="text" placeholder="+ nuevo" value={customTag} onChange={(e) => setCustomTag(e.target.value)} onKeyDown={addCustomTag} style={{ border: "1px dashed #6a9ea8", borderRadius: "20px", padding: "4px 12px", fontSize: "12px", width: "80px", outline: "none" }} />
               </div>
             </div>
 
-            {/* imagen actual */}
-            {imageUrl && !imageFile && (
-              <div style={{ marginBottom: "8px" }}>
-                <p style={{ fontSize: "13px", color: "#888", marginBottom: "6px" }}>Imagen actual:</p>
-                <img src={imageUrl} alt="imagen actual" style={{ width: "120px", borderRadius: "6px" }} />
+            {/* imagenes actuales */}
+            <div style={{ marginBottom: "20px" }}>
+              <p style={{ fontSize: "13px", color: "#888", marginBottom: "8px" }}>Imágenes actuales (clic en X para quitar):</p>
+              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                {existingImages.map((img) => (
+                  <div key={img.id} style={{ position: "relative" }}>
+                    <img src={img.url} style={{ width: "90px", height: "90px", objectFit: "cover", borderRadius: "8px" }} />
+                    <button type="button" onClick={() => removeExistingImage(img.id)} style={{ position: "absolute", top: -5, right: -5, background: "#ff4d4d", color: "white", borderRadius: "50%", border: "none", cursor: "pointer", width: "22px", height: "22px" }}>✕</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* previsualizacion de fotos nuevas */}
+            {newFiles.length > 0 && (
+              <div style={{ marginBottom: "20px" }}>
+                <p style={{ fontSize: "13px", color: "#888", marginBottom: "8px" }}>Nuevas para agregar:</p>
+                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                  {newFiles.map((file, index) => (
+                    <div key={index} style={{ position: "relative" }}>
+                      <img src={URL.createObjectURL(file)} style={{ width: "90px", height: "90px", objectFit: "cover", borderRadius: "8px", border: "2px dashed #6a9ea8" }} />
+                      <button type="button" onClick={() => removeNewFile(index)} style={{ position: "absolute", top: -5, right: -5, background: "gray", color: "white", borderRadius: "50%", border: "none", cursor: "pointer", width: "22px", height: "22px" }}>✕</button>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
-            {/* input para subir imagen nueva */}
-            <div>
-              <p style={{ fontSize: "13px", color: "#888", marginBottom: "6px" }}>
-                {imageFile ? `Nueva imagen: ${imageFile.name}` : "Cambiar imagen (opcional)"}
-              </p>
+            {/* input para sumar imagenes */}
+            <div style={{ marginBottom: "25px" }}>
+              <p style={{ fontSize: "13px", color: "#888", marginBottom: "6px" }}>Subir más (máximo 3 en total):</p>
               <input
                 type="file"
+                multiple
                 accept="image/*"
-                onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                onChange={(e) => {
+                  const selection = Array.from(e.target.files || [])
+                  const limit = 3 - existingImages.length
+                  setNewFiles([...newFiles, ...selection].slice(0, limit))
+                }}
               />
             </div>
 
