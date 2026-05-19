@@ -26,17 +26,28 @@ function Layout({ children, showLogout = true }: LayoutProps) {
 
       {/* buscador en el centro */}
       {localStorage.getItem("user") && (
-        <input
-          type="text"
-          placeholder="Buscar publicaciones..."
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              window.location.href = `/feed?search=${(e.target as HTMLInputElement).value}`
-            }
-          }}
-          style={{ borderRadius: "20px", padding: "6px 16px", fontSize: "13px", border: "none", outline: "none", width: "320px" }}
-        />
-      )}
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            <select
+              id="search-type"
+              style={{ borderRadius: "20px", padding: "6px 12px", fontSize: "13px", border: "none", outline: "none" }}
+            >
+              <option value="search">Título</option>
+              <option value="tag">Tag</option>
+              <option value="category">Categoría</option>
+            </select>
+            <input
+              type="text"
+              placeholder="Buscar publicaciones..."
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  const type = (document.getElementById("search-type") as HTMLSelectElement).value
+                  window.location.href = `/feed?${type}=${(e.target as HTMLInputElement).value}`
+                }
+              }}
+              style={{ borderRadius: "20px", padding: "6px 16px", fontSize: "13px", border: "none", outline: "none", width: "280px" }}
+            />
+          </div>
+        )}
 
       {/* links a la derecha */}
       <div className="navbar-links">

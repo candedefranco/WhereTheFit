@@ -66,6 +66,59 @@ def get_user_posts(user_id):
     posts = Post.query.filter_by(user_id=user_id).order_by(Post.created_at.desc()).all()
     return jsonify([p.to_dict() for p in posts]), 200
 
+# GET /posts/for-you → devuelve posts relevantes basados en los likes del usuario
+@posts_bp.route("/for-you", methods=["GET"])
+@jwt_required()
+def get_for_you():
+    current_user_id = int(get_jwt_identity())
+    from app.models import Like
+
+    # traigo los posts que likeo el usuario
+    liked_posts = db.session.query(Post).join(Like).filter(
+        Like.user_id == current_user_id
+    ).all()
+
+    if not liked_posts:
+        # si no likeó nada, devuelvo el feed general
+        posts = Post.query.order_by(Post.created_at.desc()).limit(20).all()
+        return jsonify([p.to_dict() for p in posts]), 200
+
+    # extraigo categorias y tags de los posts likeados
+    categories = set()
+    tags = set()
+    for post in liked_posts:
+        if post.category:
+            categories.add(post.category)
+        if post.tags:
+            for tag in post.tags.split(","):
+                tags.add(tag.strip().lower())
+
+    # busco posts similares que no sean del usuario y no haya likeado ya
+    liked_post_ids = [p.id for p in liked_posts]
+    query = Post.query.filter(
+        Post.user_id != current_user_id,
+        ~Post.id.in_(liked_post_ids)
+    )
+
+    # filtro por categoria o tags similares
+    filters = []
+    for category in categories:
+        filters.append(Post.category.ilike(f"%{category}%"))
+    for tag in tags:
+        filters.append(Post.tags.ilike(f"%{tag}%"))
+
+    if filters:
+        query = query.filter(db.or_(*filters))
+
+    posts = query.order_by(Post.created_at.desc()).limit(20).all()
+
+    # si no hay resultados, devuelvo el feed general
+    if not posts:
+        posts = Post.query.filter(
+            Post.user_id != current_user_id
+        ).order_by(Post.created_at.desc()).limit(20).all()
+
+    return jsonify([p.to_dict() for p in posts]), 200
 
 # GET /posts/<id> → devuelve un post especifico por su ID
 @posts_bp.route("/<int:post_id>", methods=["GET"])

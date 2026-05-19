@@ -24,6 +24,7 @@ function Feed() {
   const [error, setError] = useState("")
   const [showModal, setShowModal] = useState(false)
   const [postToDelete, setPostToDelete] = useState<number | null>(null)
+  const [feedType, setFeedType] = useState<"general" | "for-you">("general")
   const navigate = useNavigate()
 
   const currentUser = JSON.parse(localStorage.getItem("user") || "null")
@@ -36,9 +37,14 @@ function Feed() {
     loadPosts()
   }, [])
 
+  useEffect(() => {
+    loadPosts()
+  }, [feedType])
+
   async function loadPosts() {
     const params = new URLSearchParams(window.location.search)
-    const response = await apiFetch(`/posts?${params.toString()}`)
+    const url = feedType === "for-you" ? "/posts/for-you" : `/posts?${params.toString()}`
+    const response = await apiFetch(url)
     if (!response.ok) {
       setError("Error al cargar las publicaciones")
       return
@@ -83,6 +89,22 @@ function Feed() {
         <div className="page-header">
           <h2>Feed</h2>
           <a href="/feed/create" className="btn">+ Publicar</a>
+        </div>
+
+        {/* toggle entre feed general y for you */}
+        <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
+          <button
+            onClick={() => setFeedType("general")}
+            className={`btn btn-small ${feedType === "general" ? "" : "btn-secondary"}`}
+          >
+            Feed general
+          </button>
+          <button
+            onClick={() => setFeedType("for-you")}
+            className={`btn btn-small ${feedType === "for-you" ? "" : "btn-secondary"}`}
+          >
+            ✨ Para vos
+          </button>
         </div>
 
         {posts.length === 0 ? (
