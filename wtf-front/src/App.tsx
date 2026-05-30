@@ -9,6 +9,7 @@ import EditPost from "./pages/EditPost"
 import PostDetail from "./pages/PostDetail"
 import UserProfile from "./pages/UserProfile"
 import Search from "./pages/Search"
+import AuthCallback from "./pages/AuthCallback"
 
 function App() {
   return (
@@ -28,6 +29,8 @@ function App() {
         <Route path="*" element={<Navigate to="/" />} />
         <Route path="/profile/:id" element={<UserProfile />} />
         <Route path="/search" element={<Search />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
+
       </Routes>
     </BrowserRouter>
   )

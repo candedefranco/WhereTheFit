@@ -19,6 +19,11 @@ function CreatePost() {
   const [suggestedTags, setSuggestedTags] = useState<string[]>([])
   const [isSuggesting, setIsSuggesting] = useState(false)
 
+  // estados para ubicacion GPS
+  const [latitude, setLatitude] = useState<number | null>(null)
+  const [longitude, setLongitude] = useState<number | null>(null)
+  const [locationStatus, setLocationStatus] = useState<"loading" | "ok" | "denied" | null>(null)
+
   const navigate = useNavigate()
 
   // traigo el usuario logueado del localStorage
@@ -29,6 +34,20 @@ function CreatePost() {
     if (!currentUser) {
       navigate("/login")
     }
+  }, [])
+
+  // capturo la ubicacion del usuario al cargar el componente
+  useEffect(() => {
+    if (!navigator.geolocation) return
+    setLocationStatus("loading")
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLatitude(pos.coords.latitude)
+        setLongitude(pos.coords.longitude)
+        setLocationStatus("ok")
+      },
+      () => setLocationStatus("denied")
+    )
   }, [])
 
   // funcion para seleccionar/deseleccionar tags predefinidos
@@ -51,6 +70,7 @@ function CreatePost() {
       setCustomTag("")
     }
   }
+
   async function handleSuggestTags(e: React.MouseEvent) {
     e.preventDefault()
     setError("")
@@ -99,7 +119,8 @@ function CreatePost() {
     }
     setSuggestedTags(suggestedTags.filter(t => t !== tag))
   }
-async function handleSubmit(e: React.FormEvent) {
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError("")
 
@@ -112,6 +133,12 @@ async function handleSubmit(e: React.FormEvent) {
     imageFiles.forEach((file) => {
       formData.append("images", file)
     })
+
+    // agrego lat/lng si el usuario dio permiso de ubicacion
+    if (latitude !== null && longitude !== null) {
+      formData.append("latitude", latitude.toString())
+      formData.append("longitude", longitude.toString())
+    }
 
     // mando FormData sin Content-Type, el browser lo pone solo
     const token = localStorage.getItem("token")
@@ -147,14 +174,14 @@ async function handleSubmit(e: React.FormEvent) {
               required
             />
             {/* textarea para descripcion larga */}
-              <textarea
-                  placeholder="Descripción (talle, zona, detalles de la prenda...)"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  required
-                  rows={4}
-                  maxLength={500}
-              />
+            <textarea
+              placeholder="Descripción (talle, zona, detalles de la prenda...)"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              required
+              rows={4}
+              maxLength={500}
+            />
             {/* dropdown de categoria */}
             <select
               value={category}
@@ -211,19 +238,20 @@ async function handleSubmit(e: React.FormEvent) {
             </div>
 
             <div>
-            <p style={{ fontSize: "13px", color: "#888", marginBottom: "6px" }}>
-              {imageFiles.length > 0 ? `${imageFiles.length} imagen(es) seleccionada(s)` : "Subir imágenes (máximo 3)"}
-            </p>
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={(e) => {
-                const files = Array.from(e.target.files || []).slice(0, 3)
-                setImageFiles(files)
-              }}
-            />
-          </div>
+              <p style={{ fontSize: "13px", color: "#888", marginBottom: "6px" }}>
+                {imageFiles.length > 0 ? `${imageFiles.length} imagen(es) seleccionada(s)` : "Subir imágenes (máximo 3)"}
+              </p>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={(e) => {
+                  const files = Array.from(e.target.files || []).slice(0, 3)
+                  setImageFiles(files)
+                }}
+              />
+            </div>
+
             {/* seccion gemini */}
             <div style={{ marginTop: "12px", marginBottom: "16px" }}>
               <button
@@ -257,6 +285,14 @@ async function handleSubmit(e: React.FormEvent) {
                 </div>
               </div>
             ) : null}
+
+            {/* indicador de ubicacion */}
+            <div style={{ fontSize: "13px", color: "#888", marginBottom: "12px" }}>
+              {locationStatus === "loading" && "📍 Detectando ubicación..."}
+              {locationStatus === "ok" && "📍 Ubicación detectada ✓"}
+              {locationStatus === "denied" && "📍 Ubicación no disponible (el post no aparecerá en búsquedas por zona)"}
+            </div>
+
             <div className="btn-row">
               <button type="submit" className="btn">Publicar</button>
               <a href="/feed" className="btn btn-secondary">Cancelar</a>

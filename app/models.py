@@ -6,7 +6,8 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(255), nullable=False)
+    password = db.Column(db.String(255), nullable=True)
+    google_id = db.Column(db.String(255), unique=True, nullable=True)
     profile_picture = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
 
@@ -23,6 +24,7 @@ class User(db.Model):
             "email": self.email,
             "profile_picture": self.profile_picture,
             "created_at": self.created_at.isoformat(),
+            "google_id": self.google_id,
         }
 
 
@@ -42,6 +44,8 @@ class Post(db.Model):
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     user = db.relationship("User", backref="posts")
+    latitude = db.Column(db.Float, nullable=True)
+    longitude = db.Column(db.Float, nullable=True)
 
     def to_dict(self):
         return {
@@ -61,6 +65,8 @@ class Post(db.Model):
             "resolved_link": self.resolved_link,
             "likes": len(self.likes),
             "liked_by": [like.user_id for like in self.likes],
+            "latitude": self.latitude,
+            "longitude": self.longitude,
         }
 
 

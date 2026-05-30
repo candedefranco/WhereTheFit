@@ -120,6 +120,32 @@ def get_for_you():
 
     return jsonify([p.to_dict() for p in posts]), 200
 
+# GET /posts/nearby?lat=...&lng=...&km=...
+@posts_bp.route("/nearby", methods=["GET"])
+def get_nearby_posts():
+    try:
+        user_lat = float(request.args.get("lat"))
+        user_lng = float(request.args.get("lng"))
+        km = float(request.args.get("km", 10))
+    except (TypeError, ValueError):
+        return jsonify({"error": "lat, lng y km son requeridos y deben ser números"}), 400
+
+    sql = db.text("""
+        SELECT id FROM posts
+        WHERE latitude IS NOT NULL AND longitude IS NOT NULL
+        AND 6371 * acos(
+            cos(radians(:lat)) * cos(radians(latitude)) *
+            cos(radians(longitude) - radians(:lng)) +
+            sin(radians(:lat)) * sin(radians(latitude))
+        ) <= :km
+    """)
+
+    result = db.session.execute(sql, {"lat": user_lat, "lng": user_lng, "km": km})
+    post_ids = [row[0] for row in result]
+
+    posts = Post.query.filter(Post.id.in_(post_ids)).order_by(Post.created_at.desc()).all()
+    return jsonify([p.to_dict() for p in posts]), 200
+
 # GET /posts/<id> → devuelve un post especifico por su ID
 @posts_bp.route("/<int:post_id>", methods=["GET"])
 def get_post(post_id):
@@ -145,6 +171,8 @@ def create_post():
         category=data.get("category"),
         tags=data.get("tags"),
         user_id=current_user_id,
+        latitude=data.get("latitude", type=float),
+        longitude=data.get("longitude", type=float),
     )
 
     db.session.add(post)

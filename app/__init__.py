@@ -45,6 +45,11 @@ def create_app():
     db.init_app(app)
     bcrypt.init_app(app)
     jwt.init_app(app)
+
+    # registro las rutas de autenticacion con Google
+    from app.routes.auth import oauth
+    oauth.init_app(app)
+
     CORS(app, supports_credentials=True, origins=["http://localhost:5173", "http://127.0.0.1:5173"], expose_headers=["Authorization"])
 
     # registro las rutas de usuarios (los endpoints de /users)
@@ -59,6 +64,7 @@ def create_app():
     from app.routes.follows import follows_bp
     # registro las rutas de los likes
     from app.routes.likes import likes_bp
+
     # registro las rutas de las paginas HTML
     app.register_blueprint(users_bp)
     app.register_blueprint(auth_bp)
