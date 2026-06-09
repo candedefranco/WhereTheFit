@@ -1,5 +1,4 @@
 # WhereTheFit ✨
-
 <p align="left">
   <a href="https://python.org">
     <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python" />
@@ -39,15 +38,18 @@ Users post photos of pieces they're looking for and the community responds with 
 - **User profiles:** Track active and resolved search history.
 - **Follow system:** Connect with other style seekers.
 - **Pinterest-style masonry feed:** A fully responsive and visual exploration experience.
+- **For You feed:** Personalized post recommendations based on your liked posts.
+- **Nearby filter:** Filter posts by distance using GPS location and a custom km range slider.
+- **Google OAuth:** Sign in with your Google account.
 
 ## Tech Stack
 
 | Component | Technology | Description |
 | :--- | :--- | :--- |
 | **Backend** | Python + Flask | Robust and lightweight web framework. |
-| **Database** | PostgreSQL | Relational database for structured data. |
+| **Database** | PostgreSQL (AWS RDS) | Cloud-hosted relational database, shared across the team. |
 | **ORM** | SQLAlchemy | SQL toolkit and Object-Relational Mapper. |
-| **Auth** | JWT (JSON Web Tokens) | Secure authentication for API requests. |
+| **Auth** | JWT + Google OAuth | Secure authentication via tokens and Google sign-in. |
 | **Storage** | AWS S3 | Scalable cloud object storage for user photos. |
 | **AI** | Google Gemini | Visual analysis and intelligent tag suggestions. |
 | **Frontend** | React + TypeScript + Vite | Modern, typed, and ultra-fast development. |
