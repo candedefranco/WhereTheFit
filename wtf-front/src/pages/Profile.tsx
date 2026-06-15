@@ -33,6 +33,10 @@ function Profile() {
   // traigo el usuario logueado del localStorage
   const currentUser = JSON.parse(localStorage.getItem("user") || "null")
 
+  // estado del toggle de notificaciones por email
+  const [emailNotifications, setEmailNotifications] = useState<boolean>(currentUser?.email_notifications ?? true)
+  const [savingNotifications, setSavingNotifications] = useState(false)
+
     // si no hay sesion, mando al login
   useEffect(() => {
     if (!currentUser) {
@@ -60,6 +64,28 @@ function Profile() {
     loadProfileData()
   }, [])
 
+  // prendo o apago las notificaciones por mail
+  async function toggleEmailNotifications() {
+    setSavingNotifications(true)
+    const newValue = !emailNotifications
+
+    const response = await apiFetch(`/users/${currentUser.id}`, {
+      method: "PUT",
+      body: JSON.stringify({ email_notifications: newValue }),
+    })
+
+    if (response.ok) {
+      const data = await response.json()
+      setEmailNotifications(data.email_notifications)
+
+      // actualizo el localStorage para que quede sincronizado
+      const updatedUser = { ...currentUser, email_notifications: data.email_notifications }
+      localStorage.setItem("user", JSON.stringify(updatedUser))
+    }
+
+    setSavingNotifications(false)
+  }
+
   // devuelvo vacio en vez de null para que typescript no se rompa
   if (!currentUser) return <></>
 
@@ -80,6 +106,18 @@ function Profile() {
             <p><strong>Username:</strong> {currentUser.username}</p>
             <p><strong>Email:</strong> {currentUser.email}</p>
             <p><strong>Miembro desde:</strong> {new Date(currentUser.created_at).toLocaleDateString("es-AR")}</p>
+
+            {/* toggle de notificaciones por email */}
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "8px" }}>
+              <strong>Resumen diario por mail:</strong>
+              <button
+                onClick={toggleEmailNotifications}
+                disabled={savingNotifications}
+                className={`btn btn-small ${emailNotifications ? "" : "btn-secondary"}`}
+              >
+                {savingNotifications ? "Guardando..." : emailNotifications ? "Activado ✓" : "Desactivado"}
+              </button>
+            </div>
           </div>
 
           {/* barra de estadisticas de follows con toggle */}

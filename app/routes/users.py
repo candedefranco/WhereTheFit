@@ -102,6 +102,10 @@ def update_user(user_id):
     if "profile_picture" in data:
         user.profile_picture = data["profile_picture"]
 
+    # activa o desactiva el envio del resumen diario por mail
+    if "email_notifications" in data:
+        user.email_notifications = data["email_notifications"]
+
     # guardo los cambios en la base de datos
     db.session.commit()
     return jsonify(user.to_dict()), 200
