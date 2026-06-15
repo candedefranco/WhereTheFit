@@ -57,7 +57,7 @@ function Search() {
 
             <select value={category} onChange={(e) => setCategory(e.target.value)}>
               <option value="">Todas las categorías</option>
-              <option value="Camperas">Camperas</option>
+              <option value="Abrigos">Abrigos</option>
               <option value="Pantalones">Pantalones</option>
               <option value="Remeras">Remeras</option>
               <option value="Vestidos">Vestidos</option>

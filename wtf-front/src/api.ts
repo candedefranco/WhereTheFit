@@ -16,5 +16,12 @@ export async function apiFetch(url: string, options: RequestInit = {}) {
     headers,
   })
 
+  // si el token expiró, limpio la sesión y mando al login
+  if (response.status === 401) {
+    localStorage.removeItem("user")
+    localStorage.removeItem("token")
+    window.location.href = "/login"
+  }
+
   return response
 }

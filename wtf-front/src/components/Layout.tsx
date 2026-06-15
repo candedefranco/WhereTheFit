@@ -9,7 +9,7 @@ interface LayoutProps {
 
 // mismas categorias que en CreatePost, para que el buscador ofrezca las mismas opciones
 const categories = [
-  "Camperas",
+  "Abrigos",
   "Pantalones",
   "Remeras",
   "Vestidos",
@@ -19,6 +19,7 @@ const categories = [
   "Bolsos",
   "Ropa interior",
   "Deportivo",
+  "Top",
   "Otro",
 ]
 

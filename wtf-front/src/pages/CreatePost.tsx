@@ -122,6 +122,13 @@ function CreatePost() {
 
       const data = await response.json()
 
+      if (response.status === 401) {
+        localStorage.removeItem("user")
+        localStorage.removeItem("token")
+        window.location.href = "/login"
+        return
+      }
+
       if (response.ok) {
         // filtramos para que no sugiera tags que ya tenés seleccionados
         const newSuggestions = data.tags.filter((t: string) => !tags.includes(t))
@@ -214,7 +221,7 @@ function CreatePost() {
               onChange={(e) => setCategory(e.target.value)}
             >
               <option value="">Seleccioná una categoría</option>
-              <option value="Camperas">Camperas</option>
+              <option value="Abrigos">Abrigos</option>
               <option value="Pantalones">Pantalones</option>
               <option value="Remeras">Remeras</option>
               <option value="Vestidos">Vestidos</option>

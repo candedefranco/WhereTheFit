@@ -75,7 +75,6 @@ function EditPost() {
     e.preventDefault()
     setError("")
 
-    // necesitamos imagen nueva o URL existente
     if (!imageFile && !imageUrl) {
       setError("La publicación no tiene imagen para analizar.")
       return
@@ -89,13 +88,10 @@ function EditPost() {
       formData.append("description", description)
 
       if (imageFile) {
-        // imagen nueva seleccionada
         formData.append("image", imageFile)
       } else {
-        // descargo la imagen existente desde la URL
-        const imgRes = await fetch(imageUrl)
-        const blob = await imgRes.blob()
-        formData.append("image", blob, "existing.jpg")
+        // mando la URL y el backend descarga la imagen (evita problemas de CORS con S3)
+        formData.append("image_url", imageUrl)
       }
 
       const response = await fetch("http://localhost:5001/posts/suggest-tags", {
@@ -105,6 +101,13 @@ function EditPost() {
       })
 
       const data = await response.json()
+
+      if (response.status === 401) {
+        localStorage.removeItem("user")
+        localStorage.removeItem("token")
+        window.location.href = "/login"
+        return
+      }
 
       if (response.ok) {
         const newSuggestions = data.tags.filter((t: string) => !tags.includes(t))
@@ -203,7 +206,7 @@ function EditPost() {
               onChange={(e) => setCategory(e.target.value)}
             >
               <option value="">Seleccioná una categoría</option>
-              <option value="Camperas">Camperas</option>
+              <option value="Abrigos">Abrigos</option>
               <option value="Pantalones">Pantalones</option>
               <option value="Remeras">Remeras</option>
               <option value="Vestidos">Vestidos</option>

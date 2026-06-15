@@ -157,7 +157,7 @@ function Profile() {
     return (
       <Layout>
         <div className="container">
-          <p style={{ color: "#888", textAlign: "center", marginTop: "40px" }}>Cargando perfil...</p>
+          <div className="loading-spinner-container"><div className="loading-spinner" /></div>
         </div>
       </Layout>
     )

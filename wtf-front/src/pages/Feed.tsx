@@ -24,6 +24,7 @@ interface Post {
 function Feed() {
   const [posts, setPosts] = useState<Post[]>([])
   const [error, setError] = useState("")
+  const [isLoading, setIsLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [postToDelete, setPostToDelete] = useState<number | null>(null)
   const [feedType, setFeedType] = useState<"general" | "for-you" | "nearby">("general")
@@ -82,6 +83,7 @@ function Feed() {
   }, [km])
 
   async function loadPosts() {
+    setIsLoading(true)
     let url = ""
     if (feedType === "for-you") {
       url = "/posts/for-you"
@@ -95,6 +97,7 @@ function Feed() {
     const response = await apiFetch(url)
     if (!response.ok) {
       setError("Error al cargar las publicaciones")
+      setIsLoading(false)
       return
     }
     const data = await response.json()
@@ -109,6 +112,7 @@ function Feed() {
     })
     setLikedPosts(liked)
     setLikeCounts(counts)
+    setIsLoading(false)
   }
 
   async function handleLike(postId: number, e: React.MouseEvent) {
@@ -208,7 +212,11 @@ function Feed() {
           </div>
         )}
 
-        {posts.length === 0 ? (
+        {isLoading ? (
+          <div className="loading-spinner-container">
+            <div className="loading-spinner" />
+          </div>
+        ) : posts.length === 0 ? (
           <div className="card">
             <p>
               {feedType === "nearby"

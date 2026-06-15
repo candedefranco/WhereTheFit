@@ -46,13 +46,20 @@ def get_posts():
 @posts_bp.route("/suggest-tags", methods=["POST"])
 @jwt_required()
 def suggest_tags():
-    if "image" not in request.files:
-        return jsonify({"error": "Se requiere una imagen"}), 400
-
-    file = request.files["image"]
     description = request.form.get("description", "")
-    image_bytes = file.read()
-    mime_type = file.content_type
+
+    if "image" in request.files and request.files["image"].filename != "":
+        file = request.files["image"]
+        image_bytes = file.read()
+        mime_type = file.content_type
+    elif request.form.get("image_url"):
+        import urllib.request
+        url = request.form["image_url"]
+        with urllib.request.urlopen(url) as r:
+            image_bytes = r.read()
+            mime_type = r.headers.get_content_type() or "image/jpeg"
+    else:
+        return jsonify({"error": "Se requiere una imagen"}), 400
 
     from app.services.gemini import suggest_tags as gemini_suggest
     tags = gemini_suggest(image_bytes, mime_type, description)
