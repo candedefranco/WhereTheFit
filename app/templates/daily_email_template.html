@@ -1,0 +1,209 @@
+<!-- template del email diario -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resumen Diario WhereTheFit</title>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+            color: #333333;
+            -webkit-font-smoothing: antialiased;
+        }
+        .wrapper {
+            width: 100%;
+            table-layout: fixed;
+            background-color: #f0f2f5;
+            padding: 40px 0;
+        }
+        .container {
+            max-width: 600px;
+            background-color: #ffffff;
+            margin: 0 auto;
+            border-radius: 12px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            overflow: hidden;
+            border: 1px solid #e0e0e0;
+        }
+        .header {
+            background-color: #6a9ea8;
+            padding: 35px 30px;
+            text-align: center;
+        }
+        .header h1 {
+            color: #ffffff;
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .header h1 span {
+            font-weight: 400;
+        }
+        .content {
+            padding: 32px 30px;
+        }
+        .welcome {
+            font-size: 18px;
+            font-weight: 600;
+            color: #222222;
+            margin-top: 0;
+            margin-bottom: 8px;
+        }
+        .subtitle {
+            font-size: 14px;
+            color: #666666;
+            margin-bottom: 28px;
+            line-height: 1.5;
+        }
+        .stat-card {
+            background-color: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 14px;
+        }
+        /* estructura compatible con tablas de email tradicionales */
+        .stat-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .stat-icon {
+            font-size: 22px;
+            width: 40px;
+            vertical-align: middle;
+            text-align: left;
+        }
+        .stat-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #222222;
+            margin: 0;
+        }
+        .stat-desc {
+            font-size: 13px;
+            color: #555555;
+            margin: 3px 0 0 0;
+        }
+        .stat-desc strong {
+            color: #5a9199;
+            font-weight: 600;
+        }
+        /* estilo badge personalizado para posts resueltos */
+        .status-badge-resolved {
+            background-color: #e3f2fd;
+            color: #1565c0;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-weight: 500;
+            display: inline-block;
+            margin-top: 4px;
+        }
+        .footer {
+            background-color: #ffffff;
+            padding: 24px 30px;
+            text-align: left;
+            border-top: 1px solid #f0f0f0;
+        }
+        .footer p {
+            font-size: 13px;
+            color: #888888;
+            margin: 0;
+            line-height: 1.5;
+        }
+        .footer a {
+            color: #5a9199;
+            text-decoration: none;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <div class="header">
+                <h1>WhereTheFit<span></span></h1>
+            </div>
+
+            <div class="content">
+                <p class="welcome">¡Hola, {{ username }}!</p>
+                <p class="subtitle">Esto es todo lo que pasó en tu comunidad en las últimas 24 horas:</p>
+
+                {% if likes_nuevos > 0 %}
+                <div class="stat-card">
+                    <table class="stat-table">
+                        <tr>
+                            <td class="stat-icon">❤️</td>
+                            <td>
+                                <p class="stat-title">¡Tus publicaciones gustan!</p>
+                                <p class="stat-desc">Recibiste <strong>{{ likes_nuevos }}</strong> likes nuevos en tus outfits.</p>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                {% endif %}
+
+                {% if comentarios_nuevos > 0 %}
+                <div class="stat-card">
+                    <table class="stat-table">
+                        <tr>
+                            <td class="stat-icon">💬</td>
+                            <td>
+                                <p class="stat-title">La gente está comentando</p>
+                                <p class="stat-desc">Te dejaron <strong>{{ comentarios_nuevos }}</strong> comentarios nuevos en tus búsquedas.</p>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                {% endif %}
+
+                {% if follows_nuevos > 0 %}
+                <div class="stat-card">
+                    <table class="stat-table">
+                        <tr>
+                            <td class="stat-icon">👤</td>
+                            <td>
+                                <p class="stat-title">Tu comunidad crece</p>
+                                <p class="stat-desc">¡Tenés <strong>{{ follows_nuevos }}</strong> seguidores nuevos siguiendo tu estilo!</p>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                {% endif %}
+
+                {% if posts_resueltos > 0 %}
+                <div class="stat-card">
+                    <table class="stat-table">
+                        <tr>
+                            <td class="stat-icon">✅</td>
+                            <td>
+                                <p class="stat-title">¡Misterios de indumentaria resueltos!</p>
+                                <p class="stat-desc">
+                                    <strong>{{ posts_resueltos }}</strong> publicación(es) con las que interactuaste cambiaron de estado.
+                                </p>
+                                <span class="status-badge-resolved">resolved</span>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+
+            <div style="text-align: center; margin-top: 30px; margin-bottom: 10px;">
+    <a href="{{ frontend_url }}/feed" style="background-color: #6a9ea8; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        Ver novedades en WhereTheFit
+    </a>
+</div>
+
+            <div class="footer">
+            <p>Enviado automáticamente por el servidor de <a href="{{ frontend_url }}">WhereTheFit</a>.</p>                 <p style="margin-top: 4px;">Buenos Aires, Argentina</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

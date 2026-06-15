@@ -4,6 +4,7 @@ from flask_bcrypt import Bcrypt
 from dotenv import load_dotenv
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
+from flask_mail import Mail
 from datetime import timedelta
 import os
 
@@ -18,6 +19,9 @@ bcrypt = Bcrypt()
 
 # creo la instancia de JWTManager para manejar tokens
 jwt = JWTManager()
+
+# creo la instancia de Mail de manera global
+mail = Mail()
 
 def create_app():
     # creo la aplicacion Flask
@@ -40,11 +44,19 @@ def create_app():
     # clave secreta para firmar los tokens JWT
     app.config["JWT_SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-secret-key")
 
+    # configuro el flask-mail
+    app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
+    app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
+    app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS') == 'True'
+    app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+    app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+    app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER')
 
     # conecto SQLAlchemy y Bcrypt con nuestra app de Flask
     db.init_app(app)
     bcrypt.init_app(app)
     jwt.init_app(app)
+    mail.init_app(app)
 
     # registro las rutas de autenticacion con Google
     from app.routes.auth import oauth
@@ -78,6 +90,11 @@ def create_app():
     # creo las tablas en la base de datos si todavia no existen
     with app.app_context():
         db.create_all()
+
+    # inicializo el scheduler evitando duplicados por el reloader
+    if not app.debug or os.environ.get("WERKZEUG_RUN_MAIN") == "true":
+        from app.jobs.daily_email import init_scheduler
+        init_scheduler(app)
 
     return app
 
