@@ -34,6 +34,8 @@ function Login() {
       localStorage.setItem("user", JSON.stringify(data.user))
       localStorage.setItem("token", data.token)
       navigate("/")
+    } else if (data.error === "google_only") {
+      navigate(`/set-password?email=${encodeURIComponent(email)}`)
     } else {
       setError(data.error)
     }

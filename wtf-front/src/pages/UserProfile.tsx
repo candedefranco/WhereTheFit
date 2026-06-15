@@ -3,6 +3,8 @@ import { useNavigate, useParams } from "react-router-dom"
 import Layout from "../components/Layout"
 import { apiFetch } from "../api"
 
+const PAGE_SIZE = 10
+
 interface User {
   id: number
   username: string
@@ -21,9 +23,18 @@ interface Post {
 function UserProfile() {
   const [user, setUser] = useState<User | null>(null)
   const [posts, setPosts] = useState<Post[]>([])
+  const [postsTotal, setPostsTotal] = useState(0)
+  const [loadingMorePosts, setLoadingMorePosts] = useState(false)
+
   const [followers, setFollowers] = useState<number>(0)
   const [following, setFollowing] = useState<number>(0)
   const [isFollowing, setIsFollowing] = useState(false)
+
+  // loading de la carga inicial del perfil
+  const [isLoading, setIsLoading] = useState(true)
+  // loading del boton de seguir/dejar de seguir
+  const [isFollowLoading, setIsFollowLoading] = useState(false)
+
   const navigate = useNavigate()
   const { id } = useParams()
 
@@ -43,41 +54,79 @@ function UserProfile() {
   }, [id])
 
   async function loadUserData() {
-    // traigo datos del usuario
-    const userRes = await apiFetch(`/users/${id}`)
-    const userData = await userRes.json()
-    setUser(userData)
+    setIsLoading(true)
 
-    // traigo posts del usuario
-    const postsRes = await apiFetch(`/posts/user/${id}`)
-    const postsData = await postsRes.json()
-    setPosts(postsData)
+    try {
+      // traigo datos del usuario
+      const userRes = await apiFetch(`/users/${id}`)
+      const userData = await userRes.json()
+      setUser(userData)
 
-    // traigo seguidores
-    const followersRes = await apiFetch(`/follows/${id}/followers`)
-    const followersData = await followersRes.json()
-    setFollowers(followersData.length)
+      // traigo la primera pagina de posts del usuario
+      const postsRes = await apiFetch(`/posts/user/${id}?limit=${PAGE_SIZE}&offset=0`)
+      const postsData = await postsRes.json()
+      setPosts(postsData.items)
+      setPostsTotal(postsData.total)
 
-    // verifico si lo sigo
-    const isFollowingMe = followersData.some((f: any) => f.id === currentUser.id)
-    setIsFollowing(isFollowingMe)
+      // traigo el total de seguidores (limit=1 porque solo me interesa el total)
+      const followersRes = await apiFetch(`/follows/${id}/followers?limit=1`)
+      const followersData = await followersRes.json()
+      setFollowers(followersData.total)
 
-    // traigo seguidos
-    const followingRes = await apiFetch(`/follows/${id}/following`)
-    const followingData = await followingRes.json()
-    setFollowing(followingData.length)
+      // traigo el total de seguidos
+      const followingRes = await apiFetch(`/follows/${id}/following?limit=1`)
+      const followingData = await followingRes.json()
+      setFollowing(followingData.total)
+
+      // verifico si lo sigo
+      const isFollowingRes = await apiFetch(`/follows/${id}/is-following`)
+      const isFollowingData = await isFollowingRes.json()
+      setIsFollowing(isFollowingData.is_following)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // cargo mas publicaciones cuando aprieto "ver mas"
+  async function loadMorePosts() {
+    setLoadingMorePosts(true)
+    try {
+      const res = await apiFetch(`/posts/user/${id}?limit=${PAGE_SIZE}&offset=${posts.length}`)
+      const data = await res.json()
+      setPosts(prev => [...prev, ...data.items])
+      setPostsTotal(data.total)
+    } finally {
+      setLoadingMorePosts(false)
+    }
   }
 
   async function handleFollow() {
-    if (isFollowing) {
-      await apiFetch(`/follows/${id}`, { method: "DELETE" })
-      setIsFollowing(false)
-      setFollowers(followers - 1)
-    } else {
-      await apiFetch(`/follows/${id}`, { method: "POST" })
-      setIsFollowing(true)
-      setFollowers(followers + 1)
+    setIsFollowLoading(true)
+
+    try {
+      if (isFollowing) {
+        await apiFetch(`/follows/${id}`, { method: "DELETE" })
+        setIsFollowing(false)
+        setFollowers(followers - 1)
+      } else {
+        await apiFetch(`/follows/${id}`, { method: "POST" })
+        setIsFollowing(true)
+        setFollowers(followers + 1)
+      }
+    } finally {
+      setIsFollowLoading(false)
     }
+  }
+
+  // muestro un mensaje de carga mientras llegan los datos del perfil
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="container">
+          <p style={{ color: "#888", textAlign: "center", marginTop: "40px" }}>Cargando perfil...</p>
+        </div>
+      </Layout>
+    )
   }
 
   if (!user) return null
@@ -91,21 +140,22 @@ function UserProfile() {
             <h2>@{user.username}</h2>
             <button
               onClick={handleFollow}
+              disabled={isFollowLoading}
               className={`btn ${isFollowing ? "btn-secondary" : ""}`}
             >
-              {isFollowing ? "Dejar de seguir" : "Seguir"}
+              {isFollowLoading ? "..." : isFollowing ? "Dejar de seguir" : "Seguir"}
             </button>
           </div>
           <div style={{ display: "flex", gap: "24px", marginTop: "12px" }}>
             <p><strong>{followers}</strong> seguidores</p>
             <p><strong>{following}</strong> seguidos</p>
-            <p><strong>{posts.length}</strong> publicaciones</p>
+            <p><strong>{postsTotal}</strong> publicaciones</p>
           </div>
         </div>
 
         {/* publicaciones del usuario */}
         <div className="card">
-          <h3 style={{ marginBottom: "16px" }}>Publicaciones ({posts.length})</h3>
+          <h3 style={{ marginBottom: "16px" }}>Publicaciones ({postsTotal})</h3>
           {posts.length === 0 ? (
             <p style={{ color: "#888" }}>Este usuario no tiene publicaciones.</p>
           ) : (
@@ -126,6 +176,18 @@ function UserProfile() {
               </div>
             ))
           )}
+
+          {/* boton de ver mas publicaciones */}
+          {posts.length < postsTotal ? (
+            <button
+              onClick={loadMorePosts}
+              disabled={loadingMorePosts}
+              className="btn btn-small btn-secondary"
+              style={{ marginTop: "12px" }}
+            >
+              {loadingMorePosts ? "Cargando..." : "Ver más"}
+            </button>
+          ) : null}
         </div>
       </div>
     </Layout>

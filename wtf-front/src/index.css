@@ -348,6 +348,8 @@ select:focus {
   color: #444;
   font-size: 14px;
   line-height: 1.5;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .post-image {
@@ -410,6 +412,8 @@ select:focus {
   font-size: 14px;
   color: #444;
   line-height: 1.5;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .comment-link {
@@ -417,12 +421,25 @@ select:focus {
   color: #6a9ea8;
   display: block;
   margin-top: 4px;
+  word-break: break-all;
+  overflow-wrap: break-word;
 }
 
 .comment-reply {
   margin-left: 24px;
   border-left: 3px solid #e0e0e0;
   padding-left: 12px;
+}
+
+/* link del bloque "Encontrado en" en publicaciones resueltas */
+.resolved-link {
+  font-size: 14px;
+  color: #2e7d32;
+  display: block;
+  max-width: 100%;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  overflow: hidden;
 }
 
 /* tags */

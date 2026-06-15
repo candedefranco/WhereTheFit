@@ -24,6 +24,12 @@ function CreatePost() {
   const [longitude, setLongitude] = useState<number | null>(null)
   const [locationStatus, setLocationStatus] = useState<"loading" | "ok" | "denied" | null>(null)
 
+  // estados para ingresar la ubicacion a mano cuando no hay GPS
+  const [manualLat, setManualLat] = useState("")
+  const [manualLng, setManualLng] = useState("")
+
+  const [isPublishing, setIsPublishing] = useState(false)
+
   const navigate = useNavigate()
 
   // traigo el usuario logueado del localStorage
@@ -38,7 +44,11 @@ function CreatePost() {
 
   // capturo la ubicacion del usuario al cargar el componente
   useEffect(() => {
-    if (!navigator.geolocation) return
+    // si el browser no soporta geolocalizacion, paso directo al ingreso manual
+    if (!navigator.geolocation) {
+      setLocationStatus("denied")
+      return
+    }
     setLocationStatus("loading")
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -49,6 +59,20 @@ function CreatePost() {
       () => setLocationStatus("denied")
     )
   }, [])
+
+  // actualizo la latitud cuando el usuario la escribe a mano
+  function handleManualLat(value: string) {
+    setManualLat(value)
+    const parsed = parseFloat(value)
+    setLatitude(isNaN(parsed) ? null : parsed)
+  }
+
+  // actualizo la longitud cuando el usuario la escribe a mano
+  function handleManualLng(value: string) {
+    setManualLng(value)
+    const parsed = parseFloat(value)
+    setLongitude(isNaN(parsed) ? null : parsed)
+  }
 
   // funcion para seleccionar/deseleccionar tags predefinidos
   const toggleTag = (tag: string) => {
@@ -123,6 +147,7 @@ function CreatePost() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError("")
+    setIsPublishing(true)
 
     // uso FormData para poder mandar el archivo de imagen
     const formData = new FormData()
@@ -134,7 +159,7 @@ function CreatePost() {
       formData.append("images", file)
     })
 
-    // agrego lat/lng si el usuario dio permiso de ubicacion
+    // agrego lat/lng si el usuario dio permiso de ubicacion o la ingreso a mano
     if (latitude !== null && longitude !== null) {
       formData.append("latitude", latitude.toString())
       formData.append("longitude", longitude.toString())
@@ -151,6 +176,7 @@ function CreatePost() {
     })
 
     const data = await response.json()
+    setIsPublishing(false)
 
     if (response.ok) {
       navigate("/feed")
@@ -290,11 +316,38 @@ function CreatePost() {
             <div style={{ fontSize: "13px", color: "#888", marginBottom: "12px" }}>
               {locationStatus === "loading" && "📍 Detectando ubicación..."}
               {locationStatus === "ok" && "📍 Ubicación detectada ✓"}
-              {locationStatus === "denied" && "📍 Ubicación no disponible (el post no aparecerá en búsquedas por zona)"}
+              {locationStatus === "denied" && "📍 No pudimos detectar tu ubicación automáticamente. Podés ingresarla a mano:"}
             </div>
 
+            {/* input manual de ubicacion, solo aparece si no hay GPS disponible */}
+            {locationStatus === "denied" && (
+              <div style={{ marginBottom: "12px" }}>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    placeholder="Latitud (ej: -34.6037)"
+                    value={manualLat}
+                    onChange={(e) => handleManualLat(e.target.value)}
+                  />
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    placeholder="Longitud (ej: -58.3816)"
+                    value={manualLng}
+                    onChange={(e) => handleManualLng(e.target.value)}
+                  />
+                </div>
+                <p style={{ fontSize: "12px", color: "#aaa", marginTop: "4px" }}>
+                  Tip: buscá tu ubicación en Google Maps, hacé clic derecho sobre el lugar y copiá las coordenadas que aparecen.
+                </p>
+              </div>
+            )}
+
             <div className="btn-row">
-              <button type="submit" className="btn">Publicar</button>
+              <button type="submit" disabled={isPublishing} className="btn">
+                {isPublishing ? "Publicando..." : "Publicar"}
+              </button>
               <a href="/feed" className="btn btn-secondary">Cancelar</a>
             </div>
           </form>

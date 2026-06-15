@@ -32,6 +32,10 @@ def login():
     # busco el usuario por email
     user = User.query.filter_by(email=data["email"]).first()
 
+    # si el usuario existe pero se registró solo con Google (sin password)
+    if user and user.password is None:
+        return jsonify({"error": "google_only"}), 403
+
     # verifico que el usuario exista y que la contraseña sea correcta
     if not user or not user.check_password(data["password"]):
         return jsonify({"error": "Email o contraseña incorrectos"}), 401
@@ -59,6 +63,27 @@ def me():
     if not user:
         return jsonify({"error": "Usuario no encontrado"}), 404
     return jsonify(user.to_dict()), 200
+
+
+# POST /auth/set-password → permite a usuarios de Google configurar una contraseña
+@auth_bp.route("/set-password", methods=["POST"])
+def set_password():
+    data = request.get_json()
+    email = data.get("email")
+    password = data.get("password")
+
+    if not email or not password:
+        return jsonify({"error": "Email y contraseña requeridos"}), 400
+
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({"error": "Usuario no encontrado"}), 404
+
+    user.set_password(password)
+    db.session.commit()
+
+    token = create_access_token(identity=str(user.id))
+    return jsonify({"message": "Contraseña configurada", "user": user.to_dict(), "token": token}), 200
 
 
 # GET /auth/google → redirige al login de Google

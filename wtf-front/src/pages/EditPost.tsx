@@ -17,6 +17,11 @@ function EditPost() {
 
   const predefinedTags = ["Vintage", "Streetwear", "Coquette", "Old Money", "Aesthetic", "Minimalist"]
 
+  // estados para Gemini
+  const [suggestedTags, setSuggestedTags] = useState<string[]>([])
+  const [isSuggesting, setIsSuggesting] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+
   // obtengo el id del post de la URL (ej: /feed/edit/3)
   const { id } = useParams()
 
@@ -65,9 +70,67 @@ function EditPost() {
     }
   }
 
+  // funcion para pedirle sugerencias de tags a Gemini sobre la imagen
+  async function handleSuggestTags(e: React.MouseEvent) {
+    e.preventDefault()
+    setError("")
+
+    // necesitamos imagen nueva o URL existente
+    if (!imageFile && !imageUrl) {
+      setError("La publicación no tiene imagen para analizar.")
+      return
+    }
+
+    setIsSuggesting(true)
+
+    try {
+      const token = localStorage.getItem("token")
+      const formData = new FormData()
+      formData.append("description", description)
+
+      if (imageFile) {
+        // imagen nueva seleccionada
+        formData.append("image", imageFile)
+      } else {
+        // descargo la imagen existente desde la URL
+        const imgRes = await fetch(imageUrl)
+        const blob = await imgRes.blob()
+        formData.append("image", blob, "existing.jpg")
+      }
+
+      const response = await fetch("http://localhost:5001/posts/suggest-tags", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        const newSuggestions = data.tags.filter((t: string) => !tags.includes(t))
+        setSuggestedTags(newSuggestions)
+      } else {
+        setError(data.error || "Error al sugerir tags")
+      }
+    } catch (err) {
+      setError("Error de conexión con la IA")
+    } finally {
+      setIsSuggesting(false)
+    }
+  }
+
+  // funcion para pasar un tag de "sugerido" a "seleccionado"
+  const acceptSuggestedTag = (tag: string) => {
+    if (!tags.includes(tag) && tags.length < 5) {
+      setTags([...tags, tag])
+    }
+    setSuggestedTags(suggestedTags.filter(t => t !== tag))
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError("")
+    setIsSaving(true)
 
     const token = localStorage.getItem("token")
 
@@ -87,6 +150,7 @@ function EditPost() {
       })
 
       const data = await response.json()
+      setIsSaving(false)
       if (response.ok) {
         navigate("/feed")
       } else {
@@ -102,6 +166,7 @@ function EditPost() {
     })
 
     const data = await response.json()
+    setIsSaving(false)
     if (response.ok) {
       navigate("/feed")
     } else {
@@ -208,8 +273,44 @@ function EditPost() {
               />
             </div>
 
+            {/* seccion gemini */}
+            <div style={{ marginTop: "12px", marginBottom: "16px" }}>
+              <button
+                onClick={handleSuggestTags}
+                disabled={(!imageFile && !imageUrl) || isSuggesting}
+                type="button"
+                style={{
+                  width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #d8b4fe",
+                  backgroundColor: "#f0e6ff", color: "#6b21a8", fontWeight: "bold", cursor: (!imageFile && !imageUrl) ? "not-allowed" : "pointer"
+                }}
+              >
+                {isSuggesting ? "Pensando..." : "✨ Sugerir tags con IA"}
+              </button>
+            </div>
+
+            {suggestedTags.length > 0 ? (
+              <div style={{ marginBottom: "16px", padding: "12px", backgroundColor: "#f8fafc", borderRadius: "8px", border: "1px dashed #cbd5e1" }}>
+                <p style={{ fontSize: "13px", color: "#64748b", marginBottom: "8px", fontWeight: 600 }}>
+                  Sugerencias de IA (clic para agregar):
+                </p>
+                <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                  {suggestedTags.map((tag, i) => (
+                    <span
+                      key={i}
+                      onClick={() => acceptSuggestedTag(tag)}
+                      style={{ padding: "4px 12px", backgroundColor: "#e2e8f0", color: "#334155", borderRadius: "16px", cursor: "pointer", fontSize: "13px" }}
+                    >
+                      + {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
             <div className="btn-row">
-              <button type="submit" className="btn">Guardar cambios</button>
+              <button type="submit" disabled={isSaving} className="btn">
+                {isSaving ? "Guardando..." : "Guardar cambios"}
+              </button>
               <a href="/feed" className="btn btn-secondary">Cancelar</a>
             </div>
           </form>

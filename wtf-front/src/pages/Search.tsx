@@ -67,6 +67,7 @@ function Search() {
               <option value="Bolsos">Bolsos</option>
               <option value="Ropa interior">Ropa interior</option>
               <option value="Deportivo">Deportivo</option>
+              <option value="Top">Top</option>
               <option value="Otro">Otro</option>
             </select>
 

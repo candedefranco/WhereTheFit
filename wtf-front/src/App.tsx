@@ -10,6 +10,7 @@ import PostDetail from "./pages/PostDetail"
 import UserProfile from "./pages/UserProfile"
 import Search from "./pages/Search"
 import AuthCallback from "./pages/AuthCallback"
+import SetPassword from "./pages/SetPassword"
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
         <Route path="/profile/:id" element={<UserProfile />} />
         <Route path="/search" element={<Search />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/set-password" element={<SetPassword />} />
 
       </Routes>
     </BrowserRouter>

@@ -49,17 +49,24 @@ function PostDetail() {
   const [resolvedLink, setResolvedLink] = useState("")
   const [likes, setLikes] = useState<number>(0)
   const [liked, setLiked] = useState<boolean>(false)
+  const [isLiking, setIsLiking] = useState(false)
+  const [isCommenting, setIsCommenting] = useState(false)
+  const [isDeletingComment, setIsDeletingComment] = useState(false)
+  const [isResolving, setIsResolving] = useState(false)
+  const [isLoadingPost, setIsLoadingPost] = useState(true)
 
   const navigate = useNavigate()
   const { id } = useParams()
   const currentUser = JSON.parse(localStorage.getItem("user") || "null")
 
   async function loadPost() {
+    setIsLoadingPost(true)
     const response = await apiFetch(`/posts/${id}`)
     const data = await response.json()
     setPost(data)
     setLikes(data.likes)
     setLiked(data.liked_by.includes(currentUser.id))
+    setIsLoadingPost(false)
   }
 
   async function loadComments() {
@@ -78,6 +85,7 @@ function PostDetail() {
   }, [])
 
   async function handleLike() {
+    setIsLiking(true)
     if (liked) {
       await apiFetch(`/likes/${id}`, { method: "DELETE" })
       setLiked(false)
@@ -87,6 +95,7 @@ function PostDetail() {
       setLiked(true)
       setLikes(likes + 1)
     }
+    setIsLiking(false)
   }
 
   async function handleComment(e: React.FormEvent) {
@@ -98,6 +107,7 @@ function PostDetail() {
       return
     }
 
+    setIsCommenting(true)
     const response = await apiFetch(`/comments/${id}`, {
       method: "POST",
       body: JSON.stringify({
@@ -108,6 +118,7 @@ function PostDetail() {
     })
 
     const data = await response.json()
+    setIsCommenting(false)
 
     if (response.ok) {
       setNewComment("")
@@ -127,12 +138,14 @@ function PostDetail() {
   async function confirmDeleteComment() {
     if (!commentToDelete) return
 
+    setIsDeletingComment(true)
     const response = await apiFetch(`/comments/${commentToDelete}`, {
       method: "DELETE",
     })
 
     setShowCommentModal(false)
     setCommentToDelete(null)
+    setIsDeletingComment(false)
 
     if (response.ok) {
       loadComments()
@@ -141,6 +154,16 @@ function PostDetail() {
 
   const rootComments = comments.filter(c => c.parent_id === null)
   const getReplies = (commentId: number) => comments.filter(c => c.parent_id === commentId)
+
+  if (isLoadingPost) {
+    return (
+      <Layout>
+        <div className="container">
+          <p style={{ color: "#888", textAlign: "center", marginTop: "40px" }}>Cargando publicación...</p>
+        </div>
+      </Layout>
+    )
+  }
 
   if (!post) return null
 
@@ -172,9 +195,10 @@ function PostDetail() {
             <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "8px" }}>
               <button
                 onClick={handleLike}
+                disabled={isLiking}
                 className={`btn btn-small ${liked ? "btn-danger" : "btn-secondary"}`}
               >
-                {liked ? "❤️" : "🤍"} {likes} {likes === 1 ? "like" : "likes"}
+                {isLiking ? "..." : liked ? "❤️" : "🤍"} {likes} {likes === 1 ? "like" : "likes"}
               </button>
             </div>
 
@@ -185,12 +209,12 @@ function PostDetail() {
             )}
 
             {post.status === "resolved" && (post.resolved_location || post.resolved_instagram || post.resolved_link) && (
-              <div style={{ marginTop: "12px", padding: "12px", backgroundColor: "#e8f5e9", borderRadius: "8px" }}>
+              <div style={{ marginTop: "12px", padding: "12px", backgroundColor: "#e8f5e9", borderRadius: "8px", overflow: "hidden" }}>
                 <p style={{ fontWeight: 600, color: "#2e7d32", marginBottom: "8px" }}>✓ Encontrado en:</p>
                 {post.resolved_location && <p style={{ fontSize: "14px" }}>📍 {post.resolved_location}</p>}
                 {post.resolved_instagram && <p style={{ fontSize: "14px" }}>📸 {post.resolved_instagram}</p>}
                 {post.resolved_link && (
-                  <a href={post.resolved_link} target="_blank" rel="noreferrer" style={{ fontSize: "14px", color: "#2e7d32" }}>
+                  <a href={post.resolved_link} target="_blank" rel="noreferrer" className="resolved-link">
                     🔗 {post.resolved_link}
                   </a>
                 )}
@@ -243,6 +267,7 @@ function PostDetail() {
                           setError("El link debe empezar con https://")
                           return
                         }
+                        setIsResolving(true)
                         await apiFetch(`/posts/${post.id}`, {
                           method: "PUT",
                           body: JSON.stringify({
@@ -252,13 +277,15 @@ function PostDetail() {
                             resolved_link: resolvedLink,
                           }),
                         })
+                        setIsResolving(false)
                         setShowResolveForm(false)
                         loadPost()
                       }}
+                      disabled={isResolving}
                       className="btn btn-small"
                       style={{ backgroundColor: "#2e7d32", color: "white" }}
                     >
-                      Confirmar
+                      {isResolving ? "Guardando..." : "Confirmar"}
                     </button>
                   </div>
                 )}
@@ -314,8 +341,8 @@ function PostDetail() {
                       rows={2}
                       maxLength={300}
                     />
-                    <button type="submit" className="btn btn-small" style={{ marginTop: "8px" }}>
-                      Comentar
+                    <button type="submit" disabled={isCommenting} className="btn btn-small" style={{ marginTop: "8px" }}>
+                      {isCommenting ? "Enviando..." : "Comentar"}
                     </button>
                   </form>
                 )}
@@ -367,7 +394,9 @@ function PostDetail() {
                 value={newLink}
                 onChange={(e) => setNewLink(e.target.value)}
               />
-              <button type="submit" className="btn">Comentar</button>
+              <button type="submit" disabled={isCommenting} className="btn">
+                {isCommenting ? "Enviando..." : "Comentar"}
+              </button>
             </form>
           )}
 
@@ -380,6 +409,7 @@ function PostDetail() {
           message="¿Segura que querés borrar este comentario?"
           onConfirm={confirmDeleteComment}
           onCancel={() => { setShowCommentModal(false); setCommentToDelete(null) }}
+          loading={isDeletingComment}
         />
       )}
     </Layout>

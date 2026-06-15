@@ -3,9 +3,10 @@ interface ConfirmModalProps {
   message: string
   onConfirm: () => void
   onCancel: () => void
+  loading?: boolean
 }
 
-function ConfirmModal({ message, onConfirm, onCancel }: ConfirmModalProps) {
+function ConfirmModal({ message, onConfirm, onCancel, loading }: ConfirmModalProps) {
   return (
     <div style={{
       position: "fixed",
@@ -26,8 +27,10 @@ function ConfirmModal({ message, onConfirm, onCancel }: ConfirmModalProps) {
       }}>
         <p style={{ fontSize: "16px", marginBottom: "24px", color: "#333" }}>{message}</p>
         <div className="btn-row">
-          <button onClick={onConfirm} className="btn btn-danger">Borrar</button>
-          <button onClick={onCancel} className="btn btn-secondary">Cancelar</button>
+          <button onClick={onConfirm} disabled={loading} className="btn btn-danger">
+            {loading ? "Borrando..." : "Borrar"}
+          </button>
+          <button onClick={onCancel} disabled={loading} className="btn btn-secondary">Cancelar</button>
         </div>
       </div>
     </div>
