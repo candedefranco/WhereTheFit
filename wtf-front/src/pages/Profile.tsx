@@ -211,7 +211,6 @@ function Profile() {
             >
               <strong>{followingTotal}</strong> seguidos
             </p>
-            <p><strong>{postsTotal}</strong> publicaciones</p>
           </div>
 
           {/* muestro la lista desplegable aca abajo */}

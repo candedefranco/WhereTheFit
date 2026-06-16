@@ -49,6 +49,10 @@ def enviar_resumen_diario():
                 Like.created_at >= hace_24_horas
             ).count()
 
+            # si el usuario desactivó las notificaciones, lo salteamos
+            if not usuario.email_notifications:
+                continue
+
             # si el usuario tuvo algun movimiento, le arma el correo personalizado
             if likes_nuevos > 0 or comentarios_nuevos > 0 or follows_nuevos > 0 or posts_resueltos > 0:
 

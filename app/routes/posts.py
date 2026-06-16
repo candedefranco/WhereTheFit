@@ -70,8 +70,12 @@ def suggest_tags():
 # GET /posts/user/<user_id> → devuelve todos los posts de un usuario
 @posts_bp.route("/user/<int:user_id>", methods=["GET"])
 def get_user_posts(user_id):
-    posts = Post.query.filter_by(user_id=user_id).order_by(Post.created_at.desc()).all()
-    return jsonify([p.to_dict() for p in posts]), 200
+    limit = request.args.get("limit", 10, type=int)
+    offset = request.args.get("offset", 0, type=int)
+    query = Post.query.filter_by(user_id=user_id).order_by(Post.created_at.desc())
+    total = query.count()
+    posts = query.offset(offset).limit(limit).all()
+    return jsonify({"items": [p.to_dict() for p in posts], "total": total}), 200
 
 # GET /posts/for-you → devuelve posts relevantes basados en los likes del usuario
 @posts_bp.route("/for-you", methods=["GET"])
