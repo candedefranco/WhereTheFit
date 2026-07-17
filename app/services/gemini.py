@@ -6,6 +6,30 @@ from google.genai import types
 # creo el cliente con la API key
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
+# lista de modelos en orden de preferencia (fallback si alguno esta caido)
+GEMINI_MODELS = [
+    "gemini-3.1-flash-lite",
+    "gemini-2.5-flash-lite",
+    "gemini-2.0-flash",
+]
+
+
+def _generate_with_fallback(contents):
+    """Intenta generar contenido con cada modelo hasta que uno responda."""
+    last_error = None
+    for model in GEMINI_MODELS:
+        try:
+            response = client.models.generate_content(
+                model=model,
+                contents=contents
+            )
+            return response
+        except Exception as e:
+            last_error = e
+            print(f"[gemini] modelo {model} falló: {e}, probando siguiente...")
+            continue
+    raise last_error
+
 
 def suggest_tags(image_bytes: bytes, mime_type: str, description: str) -> list[str]:
     # armo el prompt para que devuelva tags relevantes para moda argentina
@@ -20,13 +44,10 @@ def suggest_tags(image_bytes: bytes, mime_type: str, description: str) -> list[s
     """
 
     # mando la imagen y el prompt a Gemini
-    response = client.models.generate_content(
-        model="gemini-3.1-flash-lite",
-        contents=[
-            types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
-            prompt
-        ]
-    )
+    response = _generate_with_fallback([
+        types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
+        prompt
+    ])
 
     # parseo la respuesta y devuelvo una lista de tags limpios
     raw = response.text.strip()
@@ -68,10 +89,7 @@ def suggest_similar_links(title: str, description: str, tags: str, category: str
         contents.append(types.Part.from_bytes(data=image_bytes, mime_type=mime_type))
     contents.append(prompt)
 
-    response = client.models.generate_content(
-        model="gemini-3.1-flash-lite",
-        contents=contents
-    )
+    response = _generate_with_fallback(contents)
 
     # parseo el JSON de la respuesta
     raw = response.text.strip()
