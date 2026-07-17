@@ -8,8 +8,8 @@ function EditPost() {
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [category, setCategory] = useState("")
-  const [imageUrl, setImageUrl] = useState("")
-  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [existingImages, setExistingImages] = useState<{ id: number; url: string; order: number }[]>([])
+  const [imageFiles, setImageFiles] = useState<File[]>([])
   const [tags, setTags] = useState<string[]>([])
   const [customTag, setCustomTag] = useState("")
   const [error, setError] = useState("")
@@ -35,7 +35,7 @@ function EditPost() {
     setTitle(data.title)
     setDescription(data.description)
     setCategory(data.category || "")
-    setImageUrl(data.image_url || "")
+    setExistingImages(data.images || [])
     // cargo los tags existentes del post
     setTags(data.tags || [])
   }
@@ -75,7 +75,7 @@ function EditPost() {
     e.preventDefault()
     setError("")
 
-    if (!imageFile && !imageUrl) {
+    if (imageFiles.length === 0 && existingImages.length === 0) {
       setError("La publicación no tiene imagen para analizar.")
       return
     }
@@ -87,11 +87,11 @@ function EditPost() {
       const formData = new FormData()
       formData.append("description", description)
 
-      if (imageFile) {
-        formData.append("image", imageFile)
-      } else {
+      if (imageFiles.length > 0) {
+        formData.append("image", imageFiles[0])
+      } else if (existingImages.length > 0) {
         // mando la URL y el backend descarga la imagen (evita problemas de CORS con S3)
-        formData.append("image_url", imageUrl)
+        formData.append("image_url", existingImages[0].url)
       }
 
       const response = await fetch("http://localhost:5001/posts/suggest-tags", {
@@ -137,14 +137,16 @@ function EditPost() {
 
     const token = localStorage.getItem("token")
 
-    // si hay imagen nueva, mando todo como FormData
-    if (imageFile) {
+    // si hay imagenes nuevas, mando todo como FormData
+    if (imageFiles.length > 0) {
       const formData = new FormData()
       formData.append("title", title)
       formData.append("description", description)
       formData.append("category", category)
       formData.append("tags", tags.join(","))
-      formData.append("image", imageFile)
+      imageFiles.forEach((file) => {
+        formData.append("images", file)
+      })
 
       const response = await fetch(`http://localhost:5001/posts/${id}`, {
         method: "PUT",
@@ -162,7 +164,7 @@ function EditPost() {
       return
     }
 
-    // si no hay imagen nueva, mando solo JSON
+    // si no hay imagenes nuevas, mando solo JSON
     const response = await apiFetch(`/posts/${id}`, {
       method: "PUT",
       body: JSON.stringify({ title, description, category, tags: tags.join(",") }),
@@ -256,23 +258,31 @@ function EditPost() {
               </div>
             </div>
 
-            {/* imagen actual */}
-            {imageUrl && !imageFile && (
+            {/* imagenes actuales del post */}
+            {existingImages.length > 0 && imageFiles.length === 0 && (
               <div style={{ marginBottom: "8px" }}>
-                <p style={{ fontSize: "13px", color: "#888", marginBottom: "6px" }}>Imagen actual:</p>
-                <img src={imageUrl} alt="imagen actual" style={{ width: "120px", borderRadius: "6px" }} />
+                <p style={{ fontSize: "13px", color: "#888", marginBottom: "6px" }}>Imágenes actuales:</p>
+                <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                  {existingImages.map((img) => (
+                    <img key={img.id} src={img.url} alt="imagen actual" style={{ width: "100px", height: "100px", objectFit: "cover", borderRadius: "6px" }} />
+                  ))}
+                </div>
               </div>
             )}
 
-            {/* input para subir imagen nueva */}
+            {/* input para subir imagenes nuevas (reemplazan las actuales) */}
             <div>
               <p style={{ fontSize: "13px", color: "#888", marginBottom: "6px" }}>
-                {imageFile ? `Nueva imagen: ${imageFile.name}` : "Cambiar imagen (opcional)"}
+                {imageFiles.length > 0 ? `${imageFiles.length} imagen(es) nueva(s) seleccionada(s)` : "Cambiar imágenes (opcional, máximo 3)"}
               </p>
               <input
                 type="file"
                 accept="image/*"
-                onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                multiple
+                onChange={(e) => {
+                  const files = Array.from(e.target.files || []).slice(0, 3)
+                  setImageFiles(files)
+                }}
               />
             </div>
 
@@ -280,11 +290,11 @@ function EditPost() {
             <div style={{ marginTop: "12px", marginBottom: "16px" }}>
               <button
                 onClick={handleSuggestTags}
-                disabled={(!imageFile && !imageUrl) || isSuggesting}
+                disabled={(imageFiles.length === 0 && existingImages.length === 0) || isSuggesting}
                 type="button"
                 style={{
                   width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #d8b4fe",
-                  backgroundColor: "#f0e6ff", color: "#6b21a8", fontWeight: "bold", cursor: (!imageFile && !imageUrl) ? "not-allowed" : "pointer"
+                  backgroundColor: "#f0e6ff", color: "#6b21a8", fontWeight: "bold", cursor: (imageFiles.length === 0 && existingImages.length === 0) ? "not-allowed" : "pointer"
                 }}
               >
                 {isSuggesting ? "Pensando..." : "✨ Sugerir tags con IA"}

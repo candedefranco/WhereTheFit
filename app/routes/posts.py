@@ -217,14 +217,16 @@ def update_post(post_id):
     if request.content_type and "multipart/form-data" in request.content_type:
         data = request.form
 
-        if "image" in request.files:
-            file = request.files["image"]
-            if file.filename != "":
-                from app.models import PostImage
-                PostImage.query.filter_by(post_id=post_id).delete()
-                url = upload_image(file)
-                new_image = PostImage(url=url, order=0, post_id=post_id)
-                db.session.add(new_image)
+        # soporte para multiples imagenes (igual que en create)
+        files = request.files.getlist("images")
+        if files and files[0].filename != "":
+            from app.models import PostImage
+            PostImage.query.filter_by(post_id=post_id).delete()
+            for i, file in enumerate(files[:3]):
+                if file.filename != "":
+                    url = upload_image(file)
+                    new_image = PostImage(url=url, order=i, post_id=post_id)
+                    db.session.add(new_image)
     else:
         data = request.get_json()
 
