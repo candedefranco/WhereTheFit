@@ -36,6 +36,8 @@ function getDistanceKm(lat1: number, lng1: number, lat2: number, lng2: number): 
 
 function Feed() {
   const [posts, setPosts] = useState<Post[]>([])
+  const [postsTotal, setPostsTotal] = useState(0)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
@@ -50,6 +52,7 @@ function Feed() {
   const [km, setKm] = useState(10)
   const [locationError, setLocationError] = useState("")
 
+  const PAGE_SIZE = 20
   const navigate = useNavigate()
   const currentUser = JSON.parse(localStorage.getItem("user") || "null")
   const isFirstRender = useState(true)
@@ -94,11 +97,13 @@ function Feed() {
     setIsLoading(true)
     let url = ""
     if (feedType === "for-you") {
-      url = "/posts/for-you"
+      url = `/posts/for-you?limit=${PAGE_SIZE}&offset=0`
     } else if (feedType === "nearby" && userLat && userLng) {
-      url = `/posts/nearby?lat=${userLat}&lng=${userLng}&km=${km}`
+      url = `/posts/nearby?lat=${userLat}&lng=${userLng}&km=${km}&limit=${PAGE_SIZE}&offset=0`
     } else {
       const params = new URLSearchParams(window.location.search)
+      params.set("limit", String(PAGE_SIZE))
+      params.set("offset", "0")
       url = `/posts?${params.toString()}`
     }
 
@@ -109,18 +114,55 @@ function Feed() {
       return
     }
     const data = await response.json()
-    setPosts(data)
+    setPosts(data.items)
+    setPostsTotal(data.total)
 
     // inicializo estado de likes desde los datos del post
     const liked: Record<number, boolean> = {}
     const counts: Record<number, number> = {}
-    data.forEach((p: Post) => {
+    data.items.forEach((p: Post) => {
       liked[p.id] = p.liked_by.includes(currentUser?.id)
       counts[p.id] = p.likes
     })
     setLikedPosts(liked)
     setLikeCounts(counts)
     setIsLoading(false)
+  }
+
+  async function loadMorePosts() {
+    setIsLoadingMore(true)
+    const currentOffset = posts.length
+    let url = ""
+    if (feedType === "for-you") {
+      url = `/posts/for-you?limit=${PAGE_SIZE}&offset=${currentOffset}`
+    } else if (feedType === "nearby" && userLat && userLng) {
+      url = `/posts/nearby?lat=${userLat}&lng=${userLng}&km=${km}&limit=${PAGE_SIZE}&offset=${currentOffset}`
+    } else {
+      const params = new URLSearchParams(window.location.search)
+      params.set("limit", String(PAGE_SIZE))
+      params.set("offset", String(currentOffset))
+      url = `/posts?${params.toString()}`
+    }
+
+    const response = await apiFetch(url)
+    if (!response.ok) {
+      setIsLoadingMore(false)
+      return
+    }
+    const data = await response.json()
+    setPosts(prev => [...prev, ...data.items])
+    setPostsTotal(data.total)
+
+    // agrego likes de los nuevos posts
+    const liked: Record<number, boolean> = { ...likedPosts }
+    const counts: Record<number, number> = { ...likeCounts }
+    data.items.forEach((p: Post) => {
+      liked[p.id] = p.liked_by.includes(currentUser?.id)
+      counts[p.id] = p.likes
+    })
+    setLikedPosts(liked)
+    setLikeCounts(counts)
+    setIsLoadingMore(false)
   }
 
   async function handleLike(postId: number, e: React.MouseEvent) {
@@ -301,6 +343,19 @@ function Feed() {
               </div>
             )) as React.ReactNode}
           </Masonry>
+        )}
+
+        {/* boton de ver mas posts (paginacion) */}
+        {!isLoading && posts.length < postsTotal && (
+          <div style={{ textAlign: "center", marginTop: "24px" }}>
+            <button
+              onClick={loadMorePosts}
+              disabled={isLoadingMore}
+              className="btn btn-secondary"
+            >
+              {isLoadingMore ? "Cargando..." : "Ver más publicaciones"}
+            </button>
+          </div>
         )}
 
         {error && <p className="error">{error}</p>}

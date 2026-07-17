@@ -38,8 +38,14 @@ def get_posts():
     if status:
         query = query.filter(Post.status == status)
 
-    posts = query.order_by(Post.created_at.desc()).all()
-    return jsonify([p.to_dict() for p in posts]), 200
+    # paginacion
+    limit = request.args.get("limit", 20, type=int)
+    offset = request.args.get("offset", 0, type=int)
+
+    query = query.order_by(Post.created_at.desc())
+    total = query.count()
+    posts = query.offset(offset).limit(limit).all()
+    return jsonify({"items": [p.to_dict() for p in posts], "total": total}), 200
 
 
 # POST /posts/suggest-tags → sugiere tags con Gemini (tiene que ir antes de /<int:post_id>)
@@ -84,6 +90,9 @@ def get_for_you():
     current_user_id = int(get_jwt_identity())
     from app.models import Like
 
+    limit = request.args.get("limit", 20, type=int)
+    offset = request.args.get("offset", 0, type=int)
+
     # traigo los posts que likeo el usuario
     liked_posts = db.session.query(Post).join(Like).filter(
         Like.user_id == current_user_id
@@ -91,8 +100,10 @@ def get_for_you():
 
     if not liked_posts:
         # si no likeó nada, devuelvo el feed general
-        posts = Post.query.order_by(Post.created_at.desc()).limit(20).all()
-        return jsonify([p.to_dict() for p in posts]), 200
+        query = Post.query.order_by(Post.created_at.desc())
+        total = query.count()
+        posts = query.offset(offset).limit(limit).all()
+        return jsonify({"items": [p.to_dict() for p in posts], "total": total}), 200
 
     # extraigo categorias y tags de los posts likeados
     categories = set()
@@ -121,15 +132,19 @@ def get_for_you():
     if filters:
         query = query.filter(db.or_(*filters))
 
-    posts = query.order_by(Post.created_at.desc()).limit(20).all()
+    query = query.order_by(Post.created_at.desc())
+    total = query.count()
+    posts = query.offset(offset).limit(limit).all()
 
     # si no hay resultados, devuelvo el feed general
-    if not posts:
-        posts = Post.query.filter(
+    if not posts and offset == 0:
+        query = Post.query.filter(
             Post.user_id != current_user_id
-        ).order_by(Post.created_at.desc()).limit(20).all()
+        ).order_by(Post.created_at.desc())
+        total = query.count()
+        posts = query.offset(offset).limit(limit).all()
 
-    return jsonify([p.to_dict() for p in posts]), 200
+    return jsonify({"items": [p.to_dict() for p in posts], "total": total}), 200
 
 # GET /posts/nearby?lat=...&lng=...&km=...
 @posts_bp.route("/nearby", methods=["GET"])
@@ -154,8 +169,13 @@ def get_nearby_posts():
     result = db.session.execute(sql, {"lat": user_lat, "lng": user_lng, "km": km})
     post_ids = [row[0] for row in result]
 
-    posts = Post.query.filter(Post.id.in_(post_ids)).order_by(Post.created_at.desc()).all()
-    return jsonify([p.to_dict() for p in posts]), 200
+    limit = request.args.get("limit", 20, type=int)
+    offset = request.args.get("offset", 0, type=int)
+
+    query = Post.query.filter(Post.id.in_(post_ids)).order_by(Post.created_at.desc())
+    total = query.count()
+    posts = query.offset(offset).limit(limit).all()
+    return jsonify({"items": [p.to_dict() for p in posts], "total": total}), 200
 
 # GET /posts/<id> → devuelve un post especifico por su ID
 @posts_bp.route("/<int:post_id>", methods=["GET"])
