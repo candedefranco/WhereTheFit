@@ -19,6 +19,19 @@ interface Post {
   username: string
   likes: number
   liked_by: number[]
+  latitude: number | null
+  longitude: number | null
+}
+
+// calcula distancia en km entre dos puntos usando haversine
+function getDistanceKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371
+  const dLat = (lat2 - lat1) * Math.PI / 180
+  const dLng = (lng2 - lng1) * Math.PI / 180
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLng / 2) ** 2
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
 function Feed() {
@@ -46,22 +59,26 @@ function Feed() {
       return
     }
     loadPosts()
+
+    // obtengo la ubicacion del usuario para mostrar distancias
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setUserLat(pos.coords.latitude)
+          setUserLng(pos.coords.longitude)
+        },
+        () => {} // si no da permiso, no pasa nada
+      )
+    }
   }, [])
 
   useEffect(() => {
-    // cuando cambia a "nearby", primero obtengo la ubicacion
+    // cuando cambia a "nearby", si ya tengo ubicacion cargo directo
     if (feedType === "nearby") {
       if (userLat && userLng) {
         loadPosts()
       } else {
-        setLocationError("")
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            setUserLat(pos.coords.latitude)
-            setUserLng(pos.coords.longitude)
-          },
-          () => setLocationError("No pudimos obtener tu ubicación. Revisá los permisos del browser.")
-        )
+        setLocationError("No pudimos obtener tu ubicación. Revisá los permisos del browser.")
       }
     } else {
       loadPosts()
@@ -258,6 +275,11 @@ function Feed() {
                     </a>
                     {" · "}
                     {new Date(post.created_at).toLocaleDateString("es-AR")}
+                    {userLat && userLng && post.latitude && post.longitude && (
+                      <span style={{ marginLeft: "6px", color: "#6a9ea8" }}>
+                        · 📍 {getDistanceKm(userLat, userLng, post.latitude, post.longitude).toFixed(1)} km
+                      </span>
+                    )}
                   </p>
                   {post.category && <p className="post-category">{post.category}</p>}
                   {post.tags && post.tags.length > 0 && (
