@@ -52,6 +52,7 @@ function Feed() {
 
   const navigate = useNavigate()
   const currentUser = JSON.parse(localStorage.getItem("user") || "null")
+  const isFirstRender = useState(true)
 
   useEffect(() => {
     if (!currentUser) {
@@ -72,8 +73,12 @@ function Feed() {
     }
   }, [])
 
+  // cuando cambia feedType (ignorando la primera render que ya cargo arriba)
   useEffect(() => {
-    // cuando cambia a "nearby", si ya tengo ubicacion cargo directo
+    if (isFirstRender[0]) {
+      isFirstRender[0] = false
+      return
+    }
     if (feedType === "nearby") {
       if (userLat && userLng) {
         loadPosts()
@@ -83,21 +88,7 @@ function Feed() {
     } else {
       loadPosts()
     }
-  }, [feedType])
-
-  // cuando obtengo lat/lng por primera vez, cargo los posts cercanos
-  useEffect(() => {
-    if (feedType === "nearby" && userLat && userLng) {
-      loadPosts()
-    }
-  }, [userLat, userLng])
-
-  // cuando cambia el rango de km, recargo
-  useEffect(() => {
-    if (feedType === "nearby" && userLat && userLng) {
-      loadPosts()
-    }
-  }, [km])
+  }, [feedType, km])
 
   async function loadPosts() {
     setIsLoading(true)
