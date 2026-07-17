@@ -99,8 +99,10 @@ def get_for_you():
     ).all()
 
     if not liked_posts:
-        # si no likeó nada, devuelvo el feed general
-        query = Post.query.order_by(Post.created_at.desc())
+        # si no likeó nada, devuelvo el feed general SIN sus propios posts
+        query = Post.query.filter(
+            Post.user_id != current_user_id
+        ).order_by(Post.created_at.desc())
         total = query.count()
         posts = query.offset(offset).limit(limit).all()
         return jsonify({"items": [p.to_dict() for p in posts], "total": total}), 200
@@ -136,10 +138,11 @@ def get_for_you():
     total = query.count()
     posts = query.offset(offset).limit(limit).all()
 
-    # si no hay resultados, devuelvo el feed general
+    # si no hay resultados con filtro, devuelvo posts de otros usuarios que no haya likeado
     if not posts and offset == 0:
         query = Post.query.filter(
-            Post.user_id != current_user_id
+            Post.user_id != current_user_id,
+            ~Post.id.in_(liked_post_ids)
         ).order_by(Post.created_at.desc())
         total = query.count()
         posts = query.offset(offset).limit(limit).all()
