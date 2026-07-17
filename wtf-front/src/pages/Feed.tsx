@@ -62,7 +62,7 @@ function Feed() {
       navigate("/login")
       return
     }
-    loadPosts()
+    loadPosts("general")
 
     // obtengo la ubicacion del usuario para mostrar distancias
     if (navigator.geolocation) {
@@ -84,21 +84,22 @@ function Feed() {
     }
     if (feedType === "nearby") {
       if (userLat && userLng) {
-        loadPosts()
+        loadPosts(feedType)
       } else {
         setLocationError("No pudimos obtener tu ubicación. Revisá los permisos del browser.")
       }
     } else {
-      loadPosts()
+      loadPosts(feedType)
     }
   }, [feedType, km])
 
-  async function loadPosts() {
+  async function loadPosts(type?: string) {
+    const currentFeedType = type || feedType
     setIsLoading(true)
     let url = ""
-    if (feedType === "for-you") {
+    if (currentFeedType === "for-you") {
       url = `/posts/for-you?limit=${PAGE_SIZE}&offset=0`
-    } else if (feedType === "nearby" && userLat && userLng) {
+    } else if (currentFeedType === "nearby" && userLat && userLng) {
       url = `/posts/nearby?lat=${userLat}&lng=${userLng}&km=${km}&limit=${PAGE_SIZE}&offset=0`
     } else {
       const params = new URLSearchParams(window.location.search)
@@ -190,7 +191,7 @@ function Feed() {
     setShowModal(false)
     setPostToDelete(null)
     if (response.ok) {
-      loadPosts()
+      loadPosts(feedType)
     } else {
       setError("Error al borrar la publicación")
     }
