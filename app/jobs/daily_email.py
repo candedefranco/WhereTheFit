@@ -43,11 +43,12 @@ def enviar_resumen_diario():
             ).count()
 
             # posts resueltos: busco posts que likeo y cambiaron a resuelto hace poco
-            posts_resueltos = db.session.query(Post).join(Like).filter(
+            posts_resueltos_list = db.session.query(Post).join(Like).filter(
                 Like.user_id == usuario.id,
                 Post.status == "resolved",
                 Like.created_at >= hace_24_horas
-            ).count()
+            ).all()
+            posts_resueltos = len(posts_resueltos_list)
 
             # si el usuario desactivó las notificaciones, lo salteamos
             if not usuario.email_notifications:
@@ -84,6 +85,7 @@ def enviar_resumen_diario():
                     comentarios_nuevos=comentarios_nuevos,
                     follows_nuevos=follows_nuevos,
                     posts_resueltos=posts_resueltos,
+                    posts_resueltos_list=posts_resueltos_list,
                     frontend_url = os.getenv("FRONTEND_URL")
                 )
 

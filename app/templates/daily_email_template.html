@@ -184,12 +184,27 @@
                             <td>
                                 <p class="stat-title">¡Misterios de indumentaria resueltos!</p>
                                 <p class="stat-desc">
-                                    <strong>{{ posts_resueltos }}</strong> publicación(es) con las que interactuaste cambiaron de estado.
+                                    <strong>{{ posts_resueltos }}</strong> publicación(es) con las que interactuaste se resolvieron.
                                 </p>
-                                <span class="status-badge-resolved">resolved</span>
                             </td>
                         </tr>
                     </table>
+                    {% for post in posts_resueltos_list %}
+                    <div style="margin-top: 12px; padding: 10px 14px; background-color: #f0fdf4; border-radius: 6px; border-left: 3px solid #22c55e;">
+                        <p style="margin: 0; font-size: 14px; font-weight: 600; color: #222;">
+                            <a href="{{ frontend_url }}/feed/post/{{ post.id }}" style="color: #222; text-decoration: none;">{{ post.title }}</a>
+                        </p>
+                        {% if post.resolved_location %}
+                        <p style="margin: 4px 0 0 0; font-size: 13px; color: #555;">📍 {{ post.resolved_location }}</p>
+                        {% endif %}
+                        {% if post.resolved_instagram %}
+                        <p style="margin: 4px 0 0 0; font-size: 13px; color: #555;">📸 {{ post.resolved_instagram }}</p>
+                        {% endif %}
+                        {% if post.resolved_link %}
+                        <p style="margin: 4px 0 0 0; font-size: 13px;"><a href="{{ post.resolved_link }}" style="color: #5a9199; text-decoration: none;">🔗 {{ post.resolved_link }}</a></p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
                 </div>
                 {% endif %}
             </div>
