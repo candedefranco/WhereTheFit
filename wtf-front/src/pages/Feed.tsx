@@ -64,12 +64,20 @@ function Feed() {
     }
     loadPosts("general")
 
-    // obtengo la ubicacion del usuario para mostrar distancias
-    if (navigator.geolocation) {
+    // intento recuperar la ubicacion guardada para no preguntar siempre
+    const savedLat = localStorage.getItem("userLat")
+    const savedLng = localStorage.getItem("userLng")
+    if (savedLat && savedLng) {
+      setUserLat(parseFloat(savedLat))
+      setUserLng(parseFloat(savedLng))
+    } else if (navigator.geolocation) {
+      // solo pido la ubicacion si no la tengo guardada
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           setUserLat(pos.coords.latitude)
           setUserLng(pos.coords.longitude)
+          localStorage.setItem("userLat", String(pos.coords.latitude))
+          localStorage.setItem("userLng", String(pos.coords.longitude))
         },
         () => {} // si no da permiso, no pasa nada
       )

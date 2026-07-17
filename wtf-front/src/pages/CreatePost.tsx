@@ -271,18 +271,43 @@ function CreatePost() {
             </div>
 
             <div>
+              {imageFiles.length > 0 && (
+                <div style={{ marginBottom: "8px" }}>
+                  <p style={{ fontSize: "13px", color: "#888", marginBottom: "6px" }}>Imágenes seleccionadas ({imageFiles.length}/3):</p>
+                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                    {imageFiles.map((file, i) => (
+                      <div key={i} style={{ position: "relative" }}>
+                        <img src={URL.createObjectURL(file)} alt={file.name} style={{ width: "100px", height: "100px", objectFit: "cover", borderRadius: "6px" }} />
+                        <button
+                          type="button"
+                          onClick={() => setImageFiles(imageFiles.filter((_, idx) => idx !== i))}
+                          style={{ position: "absolute", top: "-6px", right: "-6px", background: "#e53e3e", color: "white", border: "none", borderRadius: "50%", width: "20px", height: "20px", cursor: "pointer", fontSize: "12px", lineHeight: "20px", textAlign: "center" }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               <p style={{ fontSize: "13px", color: "#888", marginBottom: "6px" }}>
-                {imageFiles.length > 0 ? `${imageFiles.length} imagen(es) seleccionada(s)` : "Subir imágenes (máximo 3)"}
+                {imageFiles.length > 0 ? "Agregar otra imagen" : "Subir imágenes (máximo 3)"}
               </p>
               <input
                 type="file"
                 accept="image/*"
-                multiple
+                disabled={imageFiles.length >= 3}
                 onChange={(e) => {
-                  const files = Array.from(e.target.files || []).slice(0, 3)
-                  setImageFiles(files)
+                  const file = e.target.files?.[0]
+                  if (file && imageFiles.length < 3) {
+                    setImageFiles([...imageFiles, file])
+                  }
+                  e.target.value = ""
                 }}
               />
+              {imageFiles.length >= 3 && (
+                <p style={{ fontSize: "12px", color: "#e53e3e", marginTop: "4px" }}>Máximo 3 imágenes.</p>
+              )}
             </div>
 
             {/* seccion gemini */}
