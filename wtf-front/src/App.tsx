@@ -11,6 +11,7 @@ import UserProfile from "./pages/UserProfile"
 import Search from "./pages/Search"
 import AuthCallback from "./pages/AuthCallback"
 import SetPassword from "./pages/SetPassword"
+import Chat from "./pages/Chat"
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
         <Route path="*" element={<Navigate to="/" />} />
         <Route path="/profile/:id" element={<UserProfile />} />
         <Route path="/search" element={<Search />} />
+        <Route path="/chat" element={<Chat />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/set-password" element={<SetPassword />} />
 

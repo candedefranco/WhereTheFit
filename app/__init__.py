@@ -76,6 +76,8 @@ def create_app():
     from app.routes.follows import follows_bp
     # registro las rutas de los likes
     from app.routes.likes import likes_bp
+    # registro las rutas del chat
+    from app.routes.chat import chat_bp
 
     # registro las rutas de las paginas HTML
     app.register_blueprint(users_bp)
@@ -84,6 +86,7 @@ def create_app():
     app.register_blueprint(comments_bp)
     app.register_blueprint(follows_bp)
     app.register_blueprint(likes_bp)
+    app.register_blueprint(chat_bp)
 
 
 

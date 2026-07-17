@@ -110,6 +110,7 @@ function Layout({ children, showLogout = true }: LayoutProps) {
       <div className="navbar-links">
         {localStorage.getItem("user") && <a href="/feed">Feed</a>}
         {localStorage.getItem("user") && <a href="/feed/create">Publicar</a>}
+        {localStorage.getItem("user") && <a href="/chat">Chat</a>}
         {localStorage.getItem("user") && <a href="/profile">Perfil</a>}
         {showLogout && localStorage.getItem("user") && (
           <button onClick={handleLogout} className="btn btn-small">
