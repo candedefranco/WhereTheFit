@@ -186,6 +186,41 @@ def get_post(post_id):
     return jsonify(post.to_dict()), 200
 
 
+# GET /posts/<id>/similar-links → sugiere links de tiendas con prendas similares usando IA
+@posts_bp.route("/<int:post_id>/similar-links", methods=["GET"])
+@jwt_required()
+def get_similar_links(post_id):
+    post = db.session.get(Post, post_id)
+    if not post:
+        return jsonify({"error": "Publicación no encontrada"}), 404
+
+    # si el post tiene imagen, la descargo para mandarla a Gemini
+    image_bytes = None
+    mime_type = None
+    from app.models import PostImage
+    first_image = PostImage.query.filter_by(post_id=post_id).order_by(PostImage.order).first()
+    if first_image:
+        try:
+            import urllib.request
+            with urllib.request.urlopen(first_image.url) as r:
+                image_bytes = r.read()
+                mime_type = r.headers.get_content_type() or "image/jpeg"
+        except Exception:
+            pass  # si falla la descarga, seguimos sin imagen
+
+    from app.services.gemini import suggest_similar_links
+    links = suggest_similar_links(
+        title=post.title,
+        description=post.description,
+        tags=post.tags or "",
+        category=post.category or "",
+        image_bytes=image_bytes,
+        mime_type=mime_type,
+    )
+
+    return jsonify({"links": links}), 200
+
+
 # POST /posts → crea un post nuevo
 @posts_bp.route("", methods=["POST"])
 @jwt_required()

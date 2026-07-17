@@ -55,6 +55,11 @@ function PostDetail() {
   const [isResolving, setIsResolving] = useState(false)
   const [isLoadingPost, setIsLoadingPost] = useState(true)
 
+  // estados para links de prendas similares (IA)
+  const [similarLinks, setSimilarLinks] = useState<{ name: string; url: string; description: string }[]>([])
+  const [isLoadingSimilar, setIsLoadingSimilar] = useState(false)
+  const [similarError, setSimilarError] = useState("")
+
   const navigate = useNavigate()
   const { id } = useParams()
   const currentUser = JSON.parse(localStorage.getItem("user") || "null")
@@ -133,6 +138,24 @@ function PostDetail() {
   async function deleteComment(commentId: number) {
     setCommentToDelete(commentId)
     setShowCommentModal(true)
+  }
+
+  async function handleSimilarLinks() {
+    setIsLoadingSimilar(true)
+    setSimilarError("")
+    try {
+      const response = await apiFetch(`/posts/${id}/similar-links`)
+      const data = await response.json()
+      if (response.ok) {
+        setSimilarLinks(data.links)
+      } else {
+        setSimilarError(data.error || "Error al buscar prendas similares")
+      }
+    } catch {
+      setSimilarError("Error de conexión con la IA")
+    } finally {
+      setIsLoadingSimilar(false)
+    }
   }
 
   async function confirmDeleteComment() {
@@ -220,6 +243,41 @@ function PostDetail() {
                 )}
               </div>
             )}
+
+            {/* seccion de prendas similares con IA */}
+            <div style={{ marginTop: "16px" }}>
+              {similarLinks.length === 0 && !isLoadingSimilar && (
+                <button
+                  onClick={handleSimilarLinks}
+                  disabled={isLoadingSimilar}
+                  className="btn btn-small"
+                  style={{ backgroundColor: "#f0e6ff", color: "#6b21a8", border: "1px solid #d8b4fe", fontWeight: 600 }}
+                >
+                  {isLoadingSimilar ? "Buscando..." : "✨ Buscar prendas similares con IA"}
+                </button>
+              )}
+              {isLoadingSimilar && (
+                <p style={{ fontSize: "13px", color: "#888", marginTop: "8px" }}>Consultando a la IA...</p>
+              )}
+              {similarError && <p className="error" style={{ marginTop: "8px" }}>{similarError}</p>}
+              {similarLinks.length > 0 && (
+                <div style={{ marginTop: "12px", padding: "16px", backgroundColor: "#faf5ff", borderRadius: "8px", border: "1px solid #e9d5ff" }}>
+                  <p style={{ fontWeight: 600, color: "#6b21a8", marginBottom: "12px", fontSize: "14px" }}>
+                    ✨ Tiendas con prendas similares
+                  </p>
+                  {similarLinks.map((link, i) => (
+                    <div key={i} style={{ marginBottom: "10px", paddingBottom: "10px", borderBottom: i < similarLinks.length - 1 ? "1px solid #e9d5ff" : "none" }}>
+                      <a href={link.url} target="_blank" rel="noreferrer" style={{ color: "#5a9199", fontWeight: 600, textDecoration: "none", fontSize: "14px" }}>
+                        🔗 {link.name}
+                      </a>
+                      {link.description && (
+                        <p style={{ fontSize: "13px", color: "#555", marginTop: "2px" }}>{link.description}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {currentUser && currentUser.id === post.user_id && (
               <div style={{ marginTop: "12px" }}>
