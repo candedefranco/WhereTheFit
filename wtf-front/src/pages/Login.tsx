@@ -6,6 +6,10 @@ function Login() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
+  // estado para manejar el caso de email no verificado
+  const [emailNotVerified, setEmailNotVerified] = useState(false)
+  const [unverifiedEmail, setUnverifiedEmail] = useState("")
+  const [resendMessage, setResendMessage] = useState("")
 
   // useNavigate es el equivalente a window.location.href en React
   const navigate = useNavigate()
@@ -20,6 +24,8 @@ function Login() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError("")
+    setEmailNotVerified(false)
+    setResendMessage("")
 
     const response = await fetch("http://localhost:5001/auth/login", {
       method: "POST",
@@ -36,8 +42,32 @@ function Login() {
       navigate("/")
     } else if (data.error === "google_only") {
       navigate(`/set-password?email=${encodeURIComponent(email)}`)
+    } else if (data.error === "email_not_verified") {
+      // muestro el mensaje de email no verificado con opción de reenviar
+      setEmailNotVerified(true)
+      setUnverifiedEmail(data.email)
     } else {
       setError(data.error)
+    }
+  }
+
+  // reenvía el email de verificación
+  async function handleResendVerification() {
+    setResendMessage("")
+    try {
+      const response = await fetch("http://localhost:5001/auth/send-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: unverifiedEmail }),
+      })
+
+      if (response.ok) {
+        setResendMessage("¡Email de verificación reenviado! Revisá tu bandeja de entrada.")
+      } else {
+        setResendMessage("Error al reenviar el email. Intentá de nuevo.")
+      }
+    } catch {
+      setResendMessage("Error de conexión con el servidor.")
     }
   }
 
@@ -93,6 +123,41 @@ function Login() {
                Continuar con Google
             </a>
           </form>
+
+          {/* link de olvidé mi contraseña */}
+          <div style={{ textAlign: "center", marginTop: "16px" }}>
+            <a href="/forgot-password" style={{ color: "#5a9199", fontSize: "14px", textDecoration: "none" }}>
+              ¿Olvidaste tu contraseña?
+            </a>
+          </div>
+
+          {/* mensaje de email no verificado */}
+          {emailNotVerified && (
+            <div style={{
+              marginTop: "16px",
+              padding: "16px",
+              backgroundColor: "#fff3cd",
+              borderRadius: "8px",
+              border: "1px solid #ffc107",
+              textAlign: "center"
+            }}>
+              <p style={{ margin: "0 0 12px 0", color: "#856404", fontSize: "14px" }}>
+                Tu email no está verificado. Revisá tu bandeja de entrada.
+              </p>
+              <button
+                onClick={handleResendVerification}
+                className="btn btn-outline"
+                style={{ fontSize: "13px", padding: "8px 16px" }}
+              >
+                Reenviar email de verificación
+              </button>
+              {resendMessage && (
+                <p style={{ margin: "8px 0 0 0", fontSize: "13px", color: "#666" }}>
+                  {resendMessage}
+                </p>
+              )}
+            </div>
+          )}
 
           {error && <p className="error">{error}</p>}
         </div>

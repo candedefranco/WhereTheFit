@@ -11,6 +11,10 @@ class User(db.Model):
     profile_picture = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     email_notifications = db.Column(db.Boolean, nullable=False, default=True)
+    email_verified = db.Column(db.Boolean, nullable=False, default=False)
+    verification_token = db.Column(db.String(255), nullable=True)
+    reset_token = db.Column(db.String(255), nullable=True)
+    reset_token_expires = db.Column(db.DateTime, nullable=True)
 
     def set_password(self, password):
         self.password = bcrypt.generate_password_hash(password).decode("utf-8")
@@ -27,6 +31,7 @@ class User(db.Model):
             "created_at": self.created_at.isoformat(),
             "google_id": self.google_id,
             "email_notifications": self.email_notifications,
+            "email_verified": self.email_verified,
         }
 
 

@@ -7,6 +7,8 @@ function CreateUser() {
   const [password, setPassword] = useState("")
   const [profilePicture, setProfilePicture] = useState("")
   const [error, setError] = useState("")
+  // estado para mostrar pantalla de verificación después de crear la cuenta
+  const [created, setCreated] = useState(false)
   const navigate = useNavigate()
 
   // si ya hay sesion, mando al inicio
@@ -31,10 +33,42 @@ function CreateUser() {
     const data = await response.json()
 
     if (response.ok) {
-      navigate("/login")
+      // en vez de redirigir al login, muestro mensaje de verificación
+      setCreated(true)
     } else {
       setError(data.error)
     }
+  }
+
+  // pantalla de éxito después de crear la cuenta
+  if (created) {
+    return (
+      <>
+        <nav className="navbar">
+          <a href="/" className="navbar-logo">
+            <img src="/logo-wtf.svg" alt="WhereTheFit logo" width={45} height={40} /> <span>WhereTheFit</span>
+          </a>
+        </nav>
+
+        <div className="login-wrapper">
+          <div className="login-card" style={{ textAlign: "center" }}>
+            <div style={{ fontSize: "48px", marginBottom: "16px" }}>📧</div>
+            <h2 style={{ margin: "0 0 12px 0", color: "#222" }}>¡Revisá tu email para verificar tu cuenta!</h2>
+            <p style={{ color: "#666", marginBottom: "24px", fontSize: "14px" }}>
+              Te enviamos un email a <strong>{email}</strong> con un enlace para activar tu cuenta.
+              Revisá tu bandeja de entrada (y la carpeta de spam).
+            </p>
+            <a href="/login" className="btn" style={{ display: "inline-block" }}>
+              Ir al login
+            </a>
+          </div>
+        </div>
+
+        <footer className="footer">
+          © 2026 WhereTheFit. Todos los derechos reservados.
+        </footer>
+      </>
+    )
   }
 
   return (

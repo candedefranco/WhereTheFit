@@ -12,6 +12,9 @@ import Search from "./pages/Search"
 import AuthCallback from "./pages/AuthCallback"
 import SetPassword from "./pages/SetPassword"
 import Chat from "./pages/Chat"
+import VerifyEmail from "./pages/VerifyEmail"
+import ForgotPassword from "./pages/ForgotPassword"
+import ResetPassword from "./pages/ResetPassword"
 
 function App() {
   return (
@@ -34,6 +37,9 @@ function App() {
         <Route path="/chat" element={<Chat />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/set-password" element={<SetPassword />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
       </Routes>
     </BrowserRouter>

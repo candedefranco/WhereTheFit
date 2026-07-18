@@ -1,7 +1,10 @@
-from flask import Blueprint, request, jsonify
+import os
+import secrets
+from flask import Blueprint, request, jsonify, render_template
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app import db
 from app.models import User
+from app.services.email import send_notification_email
 
 # el blueprint es una forma de agrupar rutas relacionadas
 # todas las rutas de aca van a empezar con /users
@@ -38,6 +41,23 @@ def create_user():
     # agrego el usuario a la sesion y lo guardo en la base de datos
     db.session.add(user)
     db.session.commit()
+
+    # genero token de verificación y envío el email automáticamente
+    token = secrets.token_urlsafe(32)
+    user.verification_token = token
+    db.session.commit()
+
+    frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+    verification_link = f"{frontend_url}/verify-email?token={token}"
+
+    html_body = render_template(
+        "verification_email.html",
+        username=user.username,
+        verification_link=verification_link,
+        frontend_url=frontend_url,
+    )
+
+    send_notification_email(user.email, "Verificá tu cuenta en WhereTheFit", html_body)
 
     # devuelvo el usuario creado con codigo 201 (created)
     return jsonify(user.to_dict()), 201
