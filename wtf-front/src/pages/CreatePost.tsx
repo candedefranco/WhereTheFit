@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import Layout from "../components/Layout"
+import { API_BASE } from "../api"
 
 function CreatePost() {
   // estados para guardar lo que escribe el usuario
@@ -112,7 +113,7 @@ function CreatePost() {
 
     try {
       const token = localStorage.getItem("token")
-      const response = await fetch("http://localhost:5001/posts/suggest-tags", {
+      const response = await fetch(`${API_BASE}/posts/suggest-tags`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -174,7 +175,7 @@ function CreatePost() {
 
     // mando FormData sin Content-Type, el browser lo pone solo
     const token = localStorage.getItem("token")
-    const response = await fetch("http://localhost:5001/posts", {
+    const response = await fetch(`${API_BASE}/posts`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,

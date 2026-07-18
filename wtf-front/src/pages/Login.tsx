@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom"
 import { useState, useEffect } from "react"
+import { API_BASE } from "../api"
 
 function Login() {
   // estados para guardar lo que escribe el usuario
@@ -27,7 +28,7 @@ function Login() {
     setEmailNotVerified(false)
     setResendMessage("")
 
-    const response = await fetch("http://localhost:5001/auth/login", {
+    const response = await fetch(`${API_BASE}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
@@ -55,7 +56,7 @@ function Login() {
   async function handleResendVerification() {
     setResendMessage("")
     try {
-      const response = await fetch("http://localhost:5001/auth/send-verification", {
+      const response = await fetch(`${API_BASE}/auth/send-verification`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: unverifiedEmail }),
@@ -119,7 +120,7 @@ function Login() {
               Registrarse
             </a>
             {/* boton de login con Google */}
-            <a href="http://localhost:5001/auth/google" className="btn btn-secondary" style={{ marginTop: "8px", display: "block", textAlign: "center" }}>
+            <a href={`${API_BASE}/auth/google`} className="btn btn-secondary" style={{ marginTop: "8px", display: "block", textAlign: "center" }}>
                Continuar con Google
             </a>
           </form>

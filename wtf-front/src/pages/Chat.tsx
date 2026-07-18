@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react"
 import Layout from "../components/Layout"
-import { apiFetch } from "../api"
+import { apiFetch, WS_BASE } from "../api"
 
 interface Mutual {
   id: number
@@ -45,7 +45,7 @@ function Chat() {
     const token = localStorage.getItem("token")
     if (!token) return
 
-    const socket = new WebSocket("ws://localhost:5002")
+    const socket = new WebSocket(WS_BASE)
 
     socket.onopen = () => {
       socket.send(JSON.stringify({ type: "auth", token }))

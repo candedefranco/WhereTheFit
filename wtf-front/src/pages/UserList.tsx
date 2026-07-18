@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import Layout from "../components/Layout"
-import { apiFetch } from "../api"
+import { apiFetch, API_BASE } from "../api"
 
 // defino el tipo User para TypeScript
 interface User {
@@ -22,7 +22,7 @@ function UserList() {
 
   // traigo todos los usuarios de la base de datos
   async function loadUsers() {
-    const response = await fetch("http://localhost:5001/users")
+    const response = await fetch(`${API_BASE}/users`)
     const data = await response.json()
     setUsers(data)
   }

@@ -1,0 +1,18 @@
+# /etc/systemd/system/wherethefit.service
+# servicio de systemd para el backend Flask con Gunicorn
+
+[Unit]
+Description=WhereTheFit Backend (Gunicorn)
+After=network.target
+
+[Service]
+User=ubuntu
+Group=www-data
+WorkingDirectory=/home/ubuntu/WhereTheFit
+EnvironmentFile=/home/ubuntu/WhereTheFit/.env
+ExecStart=/home/ubuntu/WhereTheFit/venv/bin/gunicorn -c gunicorn.conf.py "app:create_app()"
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

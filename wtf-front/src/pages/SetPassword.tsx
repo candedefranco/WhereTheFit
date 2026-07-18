@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
+import { API_BASE } from "../api"
 
 function SetPassword() {
   const [searchParams] = useSearchParams()
@@ -18,7 +19,7 @@ function SetPassword() {
       return
     }
 
-    const response = await fetch("http://localhost:5001/auth/set-password", {
+    const response = await fetch(`${API_BASE}/auth/set-password`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),

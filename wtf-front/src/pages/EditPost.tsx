@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import Layout from "../components/Layout"
-import { apiFetch } from "../api"
+import { apiFetch, API_BASE } from "../api"
 
 function EditPost() {
   // estados para guardar los datos del post
@@ -94,7 +94,7 @@ function EditPost() {
         formData.append("image_url", existingImages[0].url)
       }
 
-      const response = await fetch("http://localhost:5001/posts/suggest-tags", {
+      const response = await fetch(`${API_BASE}/posts/suggest-tags`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
@@ -148,7 +148,7 @@ function EditPost() {
         formData.append("images", file)
       })
 
-      const response = await fetch(`http://localhost:5001/posts/${id}`, {
+      const response = await fetch(`${API_BASE}/posts/${id}`, {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,

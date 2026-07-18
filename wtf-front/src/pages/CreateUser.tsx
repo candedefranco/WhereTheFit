@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { API_BASE } from "../api"
 
 function CreateUser() {
   const [username, setUsername] = useState("")
@@ -24,7 +25,7 @@ function CreateUser() {
     const body: Record<string, string> = { username, email, password }
     if (profilePicture) body.profile_picture = profilePicture
 
-    const response = await fetch("http://localhost:5001/users", {
+    const response = await fetch(`${API_BASE}/users`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),

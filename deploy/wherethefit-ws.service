@@ -1,0 +1,18 @@
+# /etc/systemd/system/wherethefit-ws.service
+# servicio de systemd para el servidor WebSocket
+
+[Unit]
+Description=WhereTheFit WebSocket Server
+After=network.target
+
+[Service]
+User=ubuntu
+Group=www-data
+WorkingDirectory=/home/ubuntu/WhereTheFit
+EnvironmentFile=/home/ubuntu/WhereTheFit/.env
+ExecStart=/home/ubuntu/WhereTheFit/venv/bin/python run_ws.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -102,6 +102,7 @@ async def handler(websocket: websockets.WebSocketServerProtocol) -> None:
 
 async def start_ws_server() -> None:
     """Inicia el servidor WebSocket en el puerto 5002."""
-    print("🚀 WebSocket server corriendo en ws://localhost:5002")
-    async with websockets.serve(handler, "localhost", 5002):
+    host = os.getenv("WS_HOST", "localhost")
+    print(f"🚀 WebSocket server corriendo en ws://{host}:5002")
+    async with websockets.serve(handler, host, 5002):
         await asyncio.Future()  # corre indefinidamente

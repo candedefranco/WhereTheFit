@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { useSearchParams } from "react-router-dom"
+import { API_BASE } from "../api"
 
 function VerifyEmail() {
   const [searchParams] = useSearchParams()
@@ -16,7 +17,7 @@ function VerifyEmail() {
     }
 
     // llamo al backend para verificar el token
-    fetch(`http://localhost:5001/auth/verify-email?token=${token}`)
+    fetch(`${API_BASE}/auth/verify-email?token=${token}`)
       .then(async (res) => {
         const data = await res.json()
         if (res.ok) {
