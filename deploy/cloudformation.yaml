@@ -1,0 +1,114 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Infraestructura para WhereTheFit - EC2 con Nginx, Flask y WebSocket
+
+Parameters:
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Nombre del key pair para SSH
+  InstanceType:
+    Type: String
+    Default: t3.small
+    AllowedValues: [t2.micro, t2.small, t3.micro, t3.small, t3.medium]
+    Description: Tipo de instancia EC2
+  RDSSecurityGroupId:
+    Type: AWS::EC2::SecurityGroup::Id
+    Description: Security Group de la base de datos RDS (para agregarle acceso desde el EC2)
+
+Resources:
+  # Security Group del EC2
+  WTFSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group para WhereTheFit EC2
+      GroupName: wtf-ec2-sg
+      SecurityGroupIngress:
+        # SSH
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        # HTTP
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        # HTTPS (por si le pones un dominio con SSL despues)
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: wtf-ec2-sg
+
+  # Regla para que el EC2 pueda acceder a RDS
+  RDSIngressFromEC2:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref RDSSecurityGroupId
+      IpProtocol: tcp
+      FromPort: 5432
+      ToPort: 5432
+      SourceSecurityGroupId: !GetAtt WTFSecurityGroup.GroupId
+
+  # Instancia EC2
+  WTFInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-0c7c4e3c6b4941f0f  # Ubuntu 22.04 LTS us-east-2 (cambiar segun region)
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      SecurityGroupIds:
+        - !GetAtt WTFSecurityGroup.GroupId
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: 20
+            VolumeType: gp3
+      Tags:
+        - Key: Name
+          Value: WhereTheFit-Server
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          set -e
+
+          # actualizo el sistema
+          apt update && apt upgrade -y
+
+          # instalo dependencias base
+          apt install -y python3 python3-pip python3-venv nginx git
+
+          # instalo Node.js 20
+          curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+          apt install -y nodejs
+
+          # creo directorio de logs
+          mkdir -p /var/log/wtf
+          chown ubuntu:www-data /var/log/wtf
+
+          echo "Setup base completado. Clonar repo y correr deploy/setup-ec2.sh"
+
+  # Elastic IP para que no cambie la IP al reiniciar
+  WTFElasticIP:
+    Type: AWS::EIP
+    Properties:
+      Domain: vpc
+      InstanceId: !Ref WTFInstance
+      Tags:
+        - Key: Name
+          Value: WhereTheFit-EIP
+
+Outputs:
+  PublicIP:
+    Description: IP publica del EC2 (Elastic IP)
+    Value: !Ref WTFElasticIP
+  InstanceId:
+    Description: ID de la instancia EC2
+    Value: !Ref WTFInstance
+  SSHCommand:
+    Description: Comando para conectarse por SSH
+    Value: !Sub "ssh -i ${KeyName}.pem ubuntu@${WTFElasticIP}"
+  WebURL:
+    Description: URL de la aplicacion
+    Value: !Sub "http://${WTFElasticIP}"
