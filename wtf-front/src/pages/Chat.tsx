@@ -245,35 +245,49 @@ function Chat() {
                     </p>
                   </div>
                 )}
-                {messages.map((msg) => {
+                {messages.map((msg, index) => {
                   const isMine = msg.sender_id === currentUserId
+                  const msgDate = new Date(msg.created_at).toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" })
+                  const prevMsgDate = index > 0 ? new Date(messages[index - 1].created_at).toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" }) : null
+                  const showDateSeparator = index === 0 || msgDate !== prevMsgDate
+
                   return (
-                    <div
-                      key={msg.id}
-                      style={{
-                        display: "flex",
-                        justifyContent: isMine ? "flex-end" : "flex-start",
-                        marginBottom: "2px",
-                      }}
-                    >
-                      <div style={{
-                        maxWidth: "65%",
-                        padding: "10px 14px",
-                        borderRadius: isMine ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
-                        background: isMine ? "#3b82f6" : "#fff",
-                        color: isMine ? "#fff" : "#262626",
-                        border: isMine ? "none" : "1px solid #efefef",
-                        boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
-                        wordBreak: "break-word",
-                      }}>
-                        <p style={{ margin: 0, fontSize: "14px", lineHeight: "1.4" }}>{msg.text}</p>
-                        <p style={{
-                          margin: "4px 0 0", fontSize: "11px",
-                          color: isMine ? "rgba(255,255,255,0.7)" : "#aaa",
-                          textAlign: "right",
+                    <div key={msg.id}>
+                      {showDateSeparator && (
+                        <div style={{ display: "flex", alignItems: "center", gap: "12px", margin: "16px 0 10px" }}>
+                          <div style={{ flex: 1, height: "1px", background: "#e0e0e0" }} />
+                          <span style={{ fontSize: "12px", color: "#888", whiteSpace: "nowrap", textTransform: "capitalize" }}>
+                            {msgDate}
+                          </span>
+                          <div style={{ flex: 1, height: "1px", background: "#e0e0e0" }} />
+                        </div>
+                      )}
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: isMine ? "flex-end" : "flex-start",
+                          marginBottom: "2px",
+                        }}
+                      >
+                        <div style={{
+                          maxWidth: "65%",
+                          padding: "10px 14px",
+                          borderRadius: isMine ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
+                          background: isMine ? "#3b82f6" : "#fff",
+                          color: isMine ? "#fff" : "#262626",
+                          border: isMine ? "none" : "1px solid #efefef",
+                          boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+                          wordBreak: "break-word",
                         }}>
-                          {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                        </p>
+                          <p style={{ margin: 0, fontSize: "14px", lineHeight: "1.4" }}>{msg.text}</p>
+                          <p style={{
+                            margin: "4px 0 0", fontSize: "11px",
+                            color: isMine ? "rgba(255,255,255,0.7)" : "#aaa",
+                            textAlign: "right",
+                          }}>
+                            {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   )
