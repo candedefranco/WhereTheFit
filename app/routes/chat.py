@@ -60,3 +60,45 @@ def get_messages(user_id):
     )
 
     return jsonify([m.to_dict() for m in messages]), 200
+
+
+# DELETE /chat/messages/<message_id> → borra un mensaje propio
+@chat_bp.route("/messages/delete/<int:message_id>", methods=["DELETE"])
+@jwt_required()
+def delete_message(message_id):
+    current_user_id = int(get_jwt_identity())
+
+    message = db.session.get(Message, message_id)
+    if not message:
+        return jsonify({"error": "Mensaje no encontrado"}), 404
+
+    # solo el sender puede borrar su mensaje
+    if message.sender_id != current_user_id:
+        return jsonify({"error": "No podés borrar un mensaje que no es tuyo"}), 403
+
+    db.session.delete(message)
+    db.session.commit()
+    return jsonify({"message": "Mensaje eliminado", "id": message_id}), 200
+
+
+# PUT /chat/messages/<message_id> → edita un mensaje propio
+@chat_bp.route("/messages/edit/<int:message_id>", methods=["PUT"])
+@jwt_required()
+def edit_message(message_id):
+    current_user_id = int(get_jwt_identity())
+
+    message = db.session.get(Message, message_id)
+    if not message:
+        return jsonify({"error": "Mensaje no encontrado"}), 404
+
+    if message.sender_id != current_user_id:
+        return jsonify({"error": "No podés editar un mensaje que no es tuyo"}), 403
+
+    data = request.get_json()
+    new_text = data.get("text", "").strip()
+    if not new_text:
+        return jsonify({"error": "El mensaje no puede estar vacío"}), 400
+
+    message.text = new_text
+    db.session.commit()
+    return jsonify(message.to_dict()), 200

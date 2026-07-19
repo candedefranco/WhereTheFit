@@ -24,6 +24,9 @@ function Chat() {
   const [newMessage, setNewMessage] = useState("")
   const [ws, setWs] = useState<WebSocket | null>(null)
   const [isConnected, setIsConnected] = useState(false)
+  const [activeMenu, setActiveMenu] = useState<number | null>(null)
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const [editText, setEditText] = useState("")
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // obtengo el user_id del usuario logueado
@@ -109,6 +112,37 @@ function Chat() {
     if (e.key === "Enter") {
       sendMessage()
     }
+  }
+
+  // borrar un mensaje
+  async function deleteMessage(msgId: number) {
+    const res = await apiFetch(`/chat/messages/delete/${msgId}`, { method: "DELETE" })
+    if (res.ok) {
+      setMessages(messages.filter(m => m.id !== msgId))
+    }
+    setActiveMenu(null)
+  }
+
+  // empezar a editar un mensaje
+  function startEdit(msg: ChatMessage) {
+    setEditingId(msg.id)
+    setEditText(msg.text)
+    setActiveMenu(null)
+  }
+
+  // confirmar edicion
+  async function confirmEdit(msgId: number) {
+    if (!editText.trim()) return
+    const res = await apiFetch(`/chat/messages/edit/${msgId}`, {
+      method: "PUT",
+      body: JSON.stringify({ text: editText.trim() }),
+    })
+    if (res.ok) {
+      const updated = await res.json()
+      setMessages(messages.map(m => m.id === msgId ? { ...m, text: updated.text } : m))
+    }
+    setEditingId(null)
+    setEditText("")
   }
 
   // busco el ultimo mensaje de una conversacion para el preview
@@ -267,27 +301,85 @@ function Chat() {
                           display: "flex",
                           justifyContent: isMine ? "flex-end" : "flex-start",
                           marginBottom: "2px",
+                          position: "relative",
                         }}
                       >
-                        <div style={{
-                          maxWidth: "65%",
-                          padding: "10px 14px",
-                          borderRadius: isMine ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
-                          background: isMine ? "#3b82f6" : "#fff",
-                          color: isMine ? "#fff" : "#262626",
-                          border: isMine ? "none" : "1px solid #efefef",
-                          boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
-                          wordBreak: "break-word",
-                        }}>
-                          <p style={{ margin: 0, fontSize: "14px", lineHeight: "1.4" }}>{msg.text}</p>
-                          <p style={{
-                            margin: "4px 0 0", fontSize: "11px",
-                            color: isMine ? "rgba(255,255,255,0.7)" : "#aaa",
-                            textAlign: "right",
-                          }}>
-                            {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                          </p>
+                        <div
+                          style={{
+                            maxWidth: "65%",
+                            padding: "10px 14px",
+                            borderRadius: isMine ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
+                            background: isMine ? "#3b82f6" : "#fff",
+                            color: isMine ? "#fff" : "#262626",
+                            border: isMine ? "none" : "1px solid #efefef",
+                            boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+                            wordBreak: "break-word",
+                            cursor: isMine ? "pointer" : "default",
+                          }}
+                          onClick={() => isMine && setActiveMenu(activeMenu === msg.id ? null : msg.id)}
+                        >
+                          {editingId === msg.id ? (
+                            <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                              <input
+                                type="text"
+                                value={editText}
+                                onChange={(e) => setEditText(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === "Enter") confirmEdit(msg.id); if (e.key === "Escape") setEditingId(null) }}
+                                onClick={(e) => e.stopPropagation()}
+                                autoFocus
+                                style={{ flex: 1, padding: "4px 8px", borderRadius: "8px", border: "1px solid #ddd", fontSize: "13px", outline: "none" }}
+                              />
+                              <button
+                                onClick={(e) => { e.stopPropagation(); confirmEdit(msg.id) }}
+                                style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", fontSize: "16px" }}
+                              >✓</button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setEditingId(null) }}
+                                style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", fontSize: "16px" }}
+                              >✕</button>
+                            </div>
+                          ) : (
+                            <>
+                              <p style={{ margin: 0, fontSize: "14px", lineHeight: "1.4" }}>{msg.text}</p>
+                              <p style={{
+                                margin: "4px 0 0", fontSize: "11px",
+                                color: isMine ? "rgba(255,255,255,0.7)" : "#aaa",
+                                textAlign: "right",
+                              }}>
+                                {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                              </p>
+                            </>
+                          )}
                         </div>
+
+                        {/* menu contextual para mensajes propios */}
+                        {isMine && activeMenu === msg.id && editingId !== msg.id && (
+                          <div style={{
+                            position: "absolute",
+                            top: "100%",
+                            right: 0,
+                            marginTop: "4px",
+                            background: "#fff",
+                            borderRadius: "8px",
+                            boxShadow: "0 2px 12px rgba(0,0,0,0.15)",
+                            border: "1px solid #e0e0e0",
+                            zIndex: 10,
+                            overflow: "hidden",
+                          }}>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); startEdit(msg) }}
+                              style={{ display: "block", width: "100%", padding: "8px 16px", border: "none", background: "none", cursor: "pointer", fontSize: "13px", textAlign: "left", color: "#333" }}
+                            >
+                              ✏️ Editar
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); deleteMessage(msg.id) }}
+                              style={{ display: "block", width: "100%", padding: "8px 16px", border: "none", background: "none", cursor: "pointer", fontSize: "13px", textAlign: "left", color: "#e53e3e" }}
+                            >
+                              🗑️ Eliminar
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )
