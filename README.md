@@ -32,25 +32,84 @@ Users post photos of pieces they're looking for and the community responds with 
 
 - **Instagram-style carousel:** Upload up to 3 photos per post.
 - **AI-powered tag suggestions (Google Gemini):** Automatic suggestions based on image analysis.
+- **AI-powered similar clothing links:** Gemini suggests real stores where you can find similar items.
+- **Model fallback:** If one Gemini model is down, automatically tries the next one.
 - **Threaded comments:** Organized replies for better interaction.
 - **Resolution system:** Mark your search as resolved and share where you found it.
 - **Categories and tags:** Easily organize and find posts.
 - **User profiles:** Track active and resolved search history.
 - **Follow system:** Connect with other style seekers.
+- **Real-time chat (WebSockets):** Message your mutuals instantly with edit/delete support.
 - **Pinterest-style masonry feed:** A fully responsive and visual exploration experience.
 - **For You feed:** Personalized post recommendations based on your liked posts.
 - **Nearby filter:** Filter posts by distance using GPS location and a custom km range slider.
+- **Distance display:** See how far each post is from your location.
+- **Paginated feed:** Load more posts with a "see more" button.
 - **Google OAuth:** Sign in with your Google account.
+- **Email verification:** Verify your account via email before logging in.
+- **Password recovery:** Reset your password via email link.
+- **Daily email digest:** Get notified about likes, comments, new followers, and resolved posts.
+- **Email notifications toggle:** Enable/disable daily email summaries.
 
 ## Tech Stack
 
 | Component | Technology | Description |
 | :--- | :--- | :--- |
 | **Backend** | Python + Flask | Robust and lightweight web framework. |
-| **Database** | PostgreSQL (AWS RDS) | Cloud-hosted relational database, shared across the team. |
+| **Database** | PostgreSQL (AWS RDS) | Cloud-hosted relational database. |
 | **ORM** | SQLAlchemy | SQL toolkit and Object-Relational Mapper. |
 | **Auth** | JWT + Google OAuth | Secure authentication via tokens and Google sign-in. |
 | **Storage** | AWS S3 | Scalable cloud object storage for user photos. |
-| **AI** | Google Gemini | Visual analysis and intelligent tag suggestions. |
+| **AI** | Google Gemini | Visual analysis, tag suggestions, and similar clothing links. |
+| **Real-time** | WebSockets | Instant messaging between mutual followers. |
+| **Email** | Flask-Mail + Gmail SMTP | Verification, password recovery, and daily digests. |
 | **Frontend** | React + TypeScript + Vite | Modern, typed, and ultra-fast development. |
 | **Layout** | `react-masonry-css` | Responsive masonry layout for the feed. |
+| **Infra** | AWS EC2 + Nginx + Gunicorn | Production deployment with reverse proxy. |
+| **IaC** | AWS CloudFormation | Infrastructure as Code for reproducible deployments. |
+
+## Running locally
+
+### Backend
+```bash
+cd WhereTheFit
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python run.py
+```
+
+### WebSocket server
+```bash
+source venv/bin/activate
+python run_ws.py
+```
+
+### Frontend
+```bash
+cd wtf-front
+npm install
+npm run dev
+```
+
+## Deployment
+
+The project includes a full EC2 deployment setup:
+
+```bash
+# Deploy infrastructure with CloudFormation
+aws cloudformation create-stack --stack-name wherethefit \
+  --template-body file://deploy/cloudformation.yaml \
+  --region us-east-2 \
+  --parameters ParameterKey=KeyName,ParameterValue=your-key \
+               ParameterKey=RDSSecurityGroupId,ParameterValue=sg-xxx
+
+# Setup the EC2 instance
+ssh ubuntu@EC2_IP
+./deploy/setup-ec2.sh
+
+# Redeploy after changes
+./deploy/redeploy.sh
+```
+
+See `deploy/` folder for Nginx config, systemd services, and setup scripts.
