@@ -17,8 +17,12 @@ export async function apiFetch(url: string, options: RequestInit = {}) {
 
   // armo los headers base con el token
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  }
+
+  // solo agrego Content-Type json si hay body (evita problemas con CORS en DELETE/GET)
+  if (options.body) {
+    headers["Content-Type"] = "application/json"
   }
 
   const response = await fetch(`${API_BASE}${url}`, {
