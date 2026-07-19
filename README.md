@@ -68,24 +68,4 @@ Users post photos of pieces they're looking for and the community responds with 
 | **Infra** | AWS EC2 + Nginx + Gunicorn | Production deployment with reverse proxy. |
 | **IaC** | AWS CloudFormation | Infrastructure as Code for reproducible deployments. |
 
-## Deployment
 
-The project includes a full EC2 deployment setup:
-
-```bash
-# Deploy infrastructure with CloudFormation
-aws cloudformation create-stack --stack-name wherethefit \
-  --template-body file://deploy/cloudformation.yaml \
-  --region us-east-2 \
-  --parameters ParameterKey=KeyName,ParameterValue=your-key \
-               ParameterKey=RDSSecurityGroupId,ParameterValue=sg-xxx
-
-# Setup the EC2 instance
-ssh ubuntu@EC2_IP
-./deploy/setup-ec2.sh
-
-# Redeploy after changes
-./deploy/redeploy.sh
-```
-
-See `deploy/` folder for Nginx config, systemd services, and setup scripts.
