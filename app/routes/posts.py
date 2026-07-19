@@ -275,16 +275,32 @@ def update_post(post_id):
     if request.content_type and "multipart/form-data" in request.content_type:
         data = request.form
 
-        # soporte para multiples imagenes (igual que en create)
+        from app.models import PostImage
+        import json
+
+        # keep_images contiene los IDs de las imagenes existentes que el usuario quiere mantener
+        keep_images_raw = data.get("keep_images", "[]")
+        try:
+            keep_image_ids = json.loads(keep_images_raw)
+        except (json.JSONDecodeError, TypeError):
+            keep_image_ids = []
+
+        # borro las imagenes que el usuario eliminó (las que NO están en keep_images)
+        existing_images = PostImage.query.filter_by(post_id=post_id).all()
+        for img in existing_images:
+            if img.id not in keep_image_ids:
+                db.session.delete(img)
+
+        # cuento cuantas quedan para saber el order de las nuevas
+        kept_count = len(keep_image_ids)
+
+        # agrego las imagenes nuevas
         files = request.files.getlist("images")
-        if files and files[0].filename != "":
-            from app.models import PostImage
-            PostImage.query.filter_by(post_id=post_id).delete()
-            for i, file in enumerate(files[:3]):
-                if file.filename != "":
-                    url = upload_image(file)
-                    new_image = PostImage(url=url, order=i, post_id=post_id)
-                    db.session.add(new_image)
+        for i, file in enumerate(files[:3 - kept_count]):
+            if file.filename != "":
+                url = upload_image(file)
+                new_image = PostImage(url=url, order=kept_count + i, post_id=post_id)
+                db.session.add(new_image)
     else:
         data = request.get_json()
 

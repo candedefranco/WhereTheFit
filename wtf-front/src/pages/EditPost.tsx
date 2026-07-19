@@ -137,13 +137,19 @@ function EditPost() {
 
     const token = localStorage.getItem("token")
 
-    // si hay imagenes nuevas, mando todo como FormData
-    if (imageFiles.length > 0) {
+    // si hay imagenes nuevas O se eliminaron existentes, mando como FormData
+    const originalImages = await apiFetch(`/posts/${id}`).then(r => r.json()).then(d => d.images || [])
+    const imagesChanged = imageFiles.length > 0 || existingImages.length !== originalImages.length
+
+    if (imagesChanged) {
       const formData = new FormData()
       formData.append("title", title)
       formData.append("description", description)
       formData.append("category", category)
       formData.append("tags", tags.join(","))
+      // mando los IDs de las imagenes existentes que quiero mantener
+      formData.append("keep_images", JSON.stringify(existingImages.map(img => img.id)))
+      // mando las imagenes nuevas
       imageFiles.forEach((file) => {
         formData.append("images", file)
       })
@@ -164,7 +170,7 @@ function EditPost() {
       return
     }
 
-    // si no hay imagenes nuevas, mando solo JSON
+    // si no cambió nada de imagenes, mando solo JSON
     const response = await apiFetch(`/posts/${id}`, {
       method: "PUT",
       body: JSON.stringify({ title, description, category, tags: tags.join(",") }),
@@ -258,13 +264,22 @@ function EditPost() {
               </div>
             </div>
 
-            {/* imagenes actuales del post */}
-            {existingImages.length > 0 && imageFiles.length === 0 && (
+            {/* imagenes actuales del post (se pueden eliminar individualmente) */}
+            {existingImages.length > 0 && (
               <div style={{ marginBottom: "8px" }}>
                 <p style={{ fontSize: "13px", color: "#888", marginBottom: "6px" }}>Imágenes actuales:</p>
                 <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                   {existingImages.map((img) => (
-                    <img key={img.id} src={img.url} alt="imagen actual" style={{ width: "100px", height: "100px", objectFit: "cover", borderRadius: "6px" }} />
+                    <div key={img.id} style={{ position: "relative" }}>
+                      <img src={img.url} alt="imagen actual" style={{ width: "100px", height: "100px", objectFit: "cover", borderRadius: "6px" }} />
+                      <button
+                        type="button"
+                        onClick={() => setExistingImages(existingImages.filter((i) => i.id !== img.id))}
+                        style={{ position: "absolute", top: "-6px", right: "-6px", background: "#e53e3e", color: "white", border: "none", borderRadius: "50%", width: "20px", height: "20px", cursor: "pointer", fontSize: "12px", lineHeight: "20px", textAlign: "center" }}
+                      >
+                        ×
+                      </button>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -273,7 +288,7 @@ function EditPost() {
             {/* imagenes nuevas seleccionadas */}
             {imageFiles.length > 0 && (
               <div style={{ marginBottom: "8px" }}>
-                <p style={{ fontSize: "13px", color: "#888", marginBottom: "6px" }}>Imágenes nuevas ({imageFiles.length}/3):</p>
+                <p style={{ fontSize: "13px", color: "#888", marginBottom: "6px" }}>Imágenes nuevas:</p>
                 <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
                   {imageFiles.map((file, i) => (
                     <div key={i} style={{ position: "relative" }}>
@@ -294,15 +309,17 @@ function EditPost() {
             {/* input para agregar imagenes de a una */}
             <div>
               <p style={{ fontSize: "13px", color: "#888", marginBottom: "6px" }}>
-                {imageFiles.length > 0 ? "Agregar otra imagen" : "Cambiar imágenes (opcional, máximo 3)"}
+                {existingImages.length + imageFiles.length >= 3
+                  ? "Máximo 3 imágenes en total."
+                  : `Agregar imagen (${existingImages.length + imageFiles.length}/3)`}
               </p>
               <input
                 type="file"
                 accept="image/*"
-                disabled={imageFiles.length >= 3}
+                disabled={existingImages.length + imageFiles.length >= 3}
                 onChange={(e) => {
                   const file = e.target.files?.[0]
-                  if (file && imageFiles.length < 3) {
+                  if (file && existingImages.length + imageFiles.length < 3) {
                     setImageFiles([...imageFiles, file])
                   }
                   e.target.value = ""
