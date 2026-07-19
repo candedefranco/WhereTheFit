@@ -41,16 +41,16 @@ class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text, nullable=False)
-    category = db.Column(db.String(100), nullable=True)
+    category = db.Column(db.String(100), nullable=True, index=True)
     image_url = db.Column(db.String(500), nullable=True)
     tags = db.Column(db.Text, nullable=True)
-    status = db.Column(db.String(20), nullable=False, default="active")
+    status = db.Column(db.String(20), nullable=False, default="active", index=True)
     resolved_location = db.Column(db.String(200), nullable=True)
     resolved_instagram = db.Column(db.String(200), nullable=True)
     resolved_link = db.Column(db.String(500), nullable=True)
-    created_at = db.Column(db.DateTime, server_default=db.func.now())
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
-    user = db.relationship("User", backref="posts")
+    created_at = db.Column(db.DateTime, server_default=db.func.now(), index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
+    user = db.relationship("User", backref="posts", lazy="joined")
     latitude = db.Column(db.Float, nullable=True)
     longitude = db.Column(db.Float, nullable=True)
 
@@ -84,12 +84,12 @@ class Comment(db.Model):
     text = db.Column(db.Text, nullable=False)
     link = db.Column(db.String(500), nullable=True)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
-    post_id = db.Column(db.Integer, db.ForeignKey("posts.id"), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    post_id = db.Column(db.Integer, db.ForeignKey("posts.id"), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
     parent_id = db.Column(db.Integer, db.ForeignKey("comments.id"), nullable=True)
     replies = db.relationship("Comment", backref=db.backref("parent", remote_side=[id]))
     post = db.relationship("Post", backref="comments")
-    user = db.relationship("User", backref="comments")
+    user = db.relationship("User", backref="comments", lazy="joined")
 
     def to_dict(self):
         return {
@@ -110,8 +110,8 @@ class PostImage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     url = db.Column(db.String(500), nullable=False)
     order = db.Column(db.Integer, nullable=False, default=0)
-    post_id = db.Column(db.Integer, db.ForeignKey("posts.id"), nullable=False)
-    post = db.relationship("Post", backref="images")
+    post_id = db.Column(db.Integer, db.ForeignKey("posts.id"), nullable=False, index=True)
+    post = db.relationship("Post", backref=db.backref("images", lazy="joined"))
 
     def to_dict(self):
         return {
@@ -126,8 +126,8 @@ class Follow(db.Model):
     __tablename__ = "follows"
 
     id = db.Column(db.Integer, primary_key=True)
-    follower_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
-    followed_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    follower_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
+    followed_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     follower = db.relationship("User", foreign_keys=[follower_id], backref="following")
     followed = db.relationship("User", foreign_keys=[followed_id], backref="followers")
@@ -145,11 +145,11 @@ class Like(db.Model):
     __tablename__ = "likes"
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
-    post_id = db.Column(db.Integer, db.ForeignKey("posts.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
+    post_id = db.Column(db.Integer, db.ForeignKey("posts.id"), nullable=False, index=True)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     user = db.relationship("User", backref="likes")
-    post = db.relationship("Post", backref="likes")
+    post = db.relationship("Post", backref=db.backref("likes", lazy="joined"))
 
     def to_dict(self):
         return {
@@ -163,10 +163,10 @@ class Message(db.Model):
     __tablename__ = "messages"
 
     id = db.Column(db.Integer, primary_key=True)
-    sender_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
-    receiver_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    sender_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
+    receiver_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
     text = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, server_default=db.func.now())
+    created_at = db.Column(db.DateTime, server_default=db.func.now(), index=True)
     sender = db.relationship("User", foreign_keys=[sender_id])
     receiver = db.relationship("User", foreign_keys=[receiver_id])
 
