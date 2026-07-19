@@ -68,30 +68,6 @@ Users post photos of pieces they're looking for and the community responds with 
 | **Infra** | AWS EC2 + Nginx + Gunicorn | Production deployment with reverse proxy. |
 | **IaC** | AWS CloudFormation | Infrastructure as Code for reproducible deployments. |
 
-## Running locally
-
-### Backend
-```bash
-cd WhereTheFit
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-python run.py
-```
-
-### WebSocket server
-```bash
-source venv/bin/activate
-python run_ws.py
-```
-
-### Frontend
-```bash
-cd wtf-front
-npm install
-npm run dev
-```
-
 ## Deployment
 
 The project includes a full EC2 deployment setup:
