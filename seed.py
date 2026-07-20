@@ -37,6 +37,7 @@ POSTS = [
         "tags": "cuero,marrón,oversize,campera,vintage",
         "latitude": -34.5875,
         "longitude": -58.4016,
+        "images": ["https://images.unsplash.com/photo-1551028719-00167b16eac5?w=600"],
     },
     {
         "title": "¿Alguien sabe de dónde es este jean baggy?",
@@ -45,6 +46,7 @@ POSTS = [
         "tags": "jean,baggy,celeste,rotura,streetwear",
         "latitude": -34.6037,
         "longitude": -58.3816,
+        "images": ["https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=600"],
     },
     {
         "title": "Top tejido a crochet rosa",
@@ -53,6 +55,7 @@ POSTS = [
         "tags": "crochet,rosa,halter,verano,handmade",
         "latitude": -34.5795,
         "longitude": -58.4258,
+        "images": ["https://images.unsplash.com/photo-1525507119028-ed4c629a60a3?w=600"],
     },
     {
         "title": "Zapatillas blancas con plataforma",
@@ -61,6 +64,7 @@ POSTS = [
         "tags": "zapatillas,blancas,plataforma,chunky,streetwear",
         "latitude": -34.6118,
         "longitude": -58.3823,
+        "images": ["https://images.unsplash.com/photo-1460353581641-37baddab0fa2?w=600"],
     },
     {
         "title": "Vestido largo floreado para fiesta",
@@ -69,6 +73,7 @@ POSTS = [
         "tags": "vestido,floreado,largo,fiesta,elegante",
         "latitude": -34.5080,
         "longitude": -58.4897,
+        "images": ["https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=600"],
     },
     {
         "title": "Bolso de cuero tipo saddle",
@@ -77,6 +82,7 @@ POSTS = [
         "tags": "bolso,cuero,saddle,vintage,feria",
         "latitude": -34.5917,
         "longitude": -58.3967,
+        "images": ["https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600"],
     },
     {
         "title": "Remera negra con estampa de banda",
@@ -85,6 +91,7 @@ POSTS = [
         "tags": "remera,negra,oversize,rock,banda",
         "latitude": -34.6083,
         "longitude": -58.3712,
+        "images": ["https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=600"],
     },
     {
         "title": "Falda plisada verde esmeralda",
@@ -93,6 +100,7 @@ POSTS = [
         "tags": "falda,plisada,verde,midi,satinada",
         "latitude": -34.5647,
         "longitude": -58.4537,
+        "images": ["https://images.unsplash.com/photo-1583496661160-fb5886a0aaaa?w=600"],
     },
     {
         "title": "Anteojos de sol cat eye grandes",
@@ -101,6 +109,7 @@ POSTS = [
         "tags": "anteojos,cateye,negro,carey,aesthetic",
         "latitude": -34.5882,
         "longitude": -58.3964,
+        "images": ["https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=600"],
     },
     {
         "title": "Pantalón cargo verde militar",
@@ -109,6 +118,7 @@ POSTS = [
         "tags": "cargo,verde,militar,streetwear,tiroalto",
         "latitude": -34.6345,
         "longitude": -58.4065,
+        "images": ["https://images.unsplash.com/photo-1517438476312-10d79c077509?w=600"],
     },
     {
         "title": "Blazer oversized beige",
@@ -117,6 +127,7 @@ POSTS = [
         "tags": "blazer,beige,oversize,oldmoney,entretiempo",
         "latitude": -34.5741,
         "longitude": -58.4215,
+        "images": ["https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600"],
     },
     {
         "title": "Set deportivo lila/lavanda",
@@ -125,6 +136,7 @@ POSTS = [
         "tags": "deportivo,lila,lavanda,calza,gym",
         "latitude": -34.6158,
         "longitude": -58.4333,
+        "images": ["https://images.unsplash.com/photo-1538805060514-97d9cc17730c?w=600"],
     },
     {
         "title": "Corset negro con ballenas",
@@ -133,6 +145,7 @@ POSTS = [
         "tags": "corset,negro,ballenas,fiesta,coquette",
         "latitude": -34.5998,
         "longitude": -58.3750,
+        "images": ["https://images.unsplash.com/photo-1617137968427-85924c800a22?w=600"],
     },
     {
         "title": "Botas texanas color camel",
@@ -141,6 +154,7 @@ POSTS = [
         "tags": "botas,texanas,cowboy,camel,verano",
         "latitude": -34.5553,
         "longitude": -58.4617,
+        "images": ["https://images.unsplash.com/photo-1608256246200-53e635b5b65f?w=600"],
     },
     {
         "title": "Aros argolla dorados grandes",
@@ -149,6 +163,7 @@ POSTS = [
         "tags": "aros,argolla,dorado,acero,minimalist",
         "latitude": -34.6037,
         "longitude": -58.3816,
+        "images": ["https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600"],
     },
     {
         "title": "Campera puffer rosa chicle",
@@ -157,6 +172,7 @@ POSTS = [
         "tags": "puffer,rosa,fucsia,crop,invierno",
         "latitude": -34.5839,
         "longitude": -58.4319,
+        "images": ["https://images.unsplash.com/photo-1544923246-77307dd270b5?w=600"],
     },
     {
         "title": "Buzo hoodie tie-dye",
@@ -165,6 +181,7 @@ POSTS = [
         "tags": "buzo,hoodie,tiedye,pastel,oversize",
         "latitude": -34.6068,
         "longitude": -58.4077,
+        "images": ["https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=600"],
     },
     {
         "title": "Pollera de jean con botones",
@@ -173,6 +190,7 @@ POSTS = [
         "tags": "pollera,jean,botones,vintage,90s",
         "latitude": -34.5726,
         "longitude": -58.4378,
+        "images": ["https://images.unsplash.com/photo-1592301933927-35b597393c0a?w=600"],
     },
 ]
 
@@ -246,6 +264,13 @@ def seed():
                 created_at=datetime.utcnow() - timedelta(days=days_ago, hours=hours_ago),
             )
             db.session.add(post)
+            db.session.flush()
+
+            # agrego las imagenes del post
+            for j, img_url in enumerate(p_data.get("images", [])):
+                image = PostImage(url=img_url, order=j, post_id=post.id)
+                db.session.add(image)
+
             posts.append(post)
 
         db.session.flush()
