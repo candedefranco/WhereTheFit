@@ -10,6 +10,7 @@ function CreateUser() {
   const [error, setError] = useState("")
   // estado para mostrar pantalla de verificación después de crear la cuenta
   const [created, setCreated] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
 
   // si ya hay sesion, mando al inicio
@@ -20,6 +21,7 @@ function CreateUser() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError("")
+    setIsLoading(true)
 
     // armo el body solo con los campos que tienen valor
     const body: Record<string, string> = { username, email, password }
@@ -32,6 +34,7 @@ function CreateUser() {
     })
 
     const data = await response.json()
+    setIsLoading(false)
 
     if (response.ok) {
       // en vez de redirigir al login, muestro mensaje de verificación
@@ -117,7 +120,9 @@ function CreateUser() {
               onChange={(e) => setProfilePicture(e.target.value)}
             />
             <div className="btn-row">
-              <button type="submit" className="btn">Crear usuario</button>
+              <button type="submit" disabled={isLoading} className="btn">
+                {isLoading ? "Creando cuenta..." : "Crear usuario"}
+              </button>
               <a href="/" className="btn btn-secondary">Cancelar</a>
             </div>
           </form>
