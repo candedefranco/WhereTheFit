@@ -340,9 +340,10 @@ def delete_post(post_id):
     if post.user_id != current_user_id:
         return jsonify({"error": "No podés borrar una publicación que no es tuya"}), 403
 
-    from app.models import Comment, PostImage
+    from app.models import Comment, PostImage, Like
     PostImage.query.filter_by(post_id=post_id).delete()
     Comment.query.filter_by(post_id=post_id).delete()
+    Like.query.filter_by(post_id=post_id).delete()
 
     db.session.delete(post)
     db.session.commit()
