@@ -211,8 +211,7 @@ def reset_password():
 # GET /auth/google → redirige al login de Google
 @auth_bp.route("/google", methods=["GET"])
 def google_login():
-    # armo el redirect_uri basado en el host del request (funciona en local y en prod)
-    redirect_uri = f"{request.host_url}auth/google/callback"
+    redirect_uri = "http://localhost:5001/auth/google/callback"
     return google.authorize_redirect(redirect_uri)
 
 
