@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import Layout from "../components/Layout"
 import { apiFetch } from "../api"
@@ -55,7 +55,7 @@ function Feed() {
   const PAGE_SIZE = 20
   const navigate = useNavigate()
   const currentUser = JSON.parse(localStorage.getItem("user") || "null")
-  const isFirstRender = useState(true)
+  const isFirstRender = useRef(true)
 
   useEffect(() => {
     if (!currentUser) {
@@ -86,8 +86,8 @@ function Feed() {
 
   // cuando cambia feedType (ignorando la primera render que ya cargo arriba)
   useEffect(() => {
-    if (isFirstRender[0]) {
-      isFirstRender[0] = false
+    if (isFirstRender.current) {
+      isFirstRender.current = false
       return
     }
     if (feedType === "nearby") {
