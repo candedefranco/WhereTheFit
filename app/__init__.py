@@ -62,7 +62,7 @@ def create_app():
     from app.routes.auth import oauth
     oauth.init_app(app)
 
-    CORS(app, supports_credentials=True, origins=["http://localhost:5173", "http://127.0.0.1:5173"], expose_headers=["Authorization"])
+    CORS(app, supports_credentials=True, origins=["http://localhost:5173", "http://127.0.0.1:5173"], expose_headers=["Authorization"], allow_headers=["Content-Type", "Authorization"], methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
 
     # registro las rutas de usuarios (los endpoints de /users)
     from app.routes.users import users_bp
