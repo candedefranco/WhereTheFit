@@ -230,8 +230,13 @@ function CreatePost() {
               <option value="Zapatos">Zapatos</option>
               <option value="Accesorios">Accesorios</option>
               <option value="Bolsos">Bolsos</option>
+              <option value="Sastrería">Sastrería</option>
+              <option value="Trajes">Trajes</option>
+              <option value="Jeans">Jeans</option>
+              <option value="Camperas">Camperas</option>
               <option value="Ropa interior">Ropa interior</option>
               <option value="Deportivo">Deportivo</option>
+              <option value="Top">Top</option>
               <option value="Otro">Otro</option>
             </select>
 
