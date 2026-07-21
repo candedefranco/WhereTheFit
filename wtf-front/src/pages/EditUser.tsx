@@ -1,30 +1,29 @@
 import { useState, useEffect } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { apiFetch } from "../api"
+import { apiFetch, API_BASE } from "../api"
+import Layout from "../components/Layout"
 
 function EditUser() {
   const [username, setUsername] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [profilePicture, setProfilePicture] = useState("")
+  const [currentPicture, setCurrentPicture] = useState("")
+  const [pictureFile, setPictureFile] = useState<File | null>(null)
   const [error, setError] = useState("")
+  const [isSaving, setIsSaving] = useState(false)
   const navigate = useNavigate()
 
-  // useParams trae el id de la URL (ej: /edit/3)
   const { id } = useParams()
-
   const currentUser = JSON.parse(localStorage.getItem("user") || "null")
 
-async function loadUser() {
+  async function loadUser() {
     const response = await apiFetch(`/users/${id}`)
     const data = await response.json()
-    // relleno el formulario con datos actuales
     setUsername(data.username)
     setEmail(data.email)
-    setProfilePicture(data.profile_picture || "")
+    setCurrentPicture(data.profile_picture || "")
   }
 
-  // si no hay sesion, mando al login
   useEffect(() => {
     if (!currentUser) {
       navigate("/login")
@@ -36,10 +35,39 @@ async function loadUser() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError("")
+    setIsSaving(true)
 
+    const token = localStorage.getItem("token")
+
+    // si hay foto nueva, mando como FormData
+    if (pictureFile) {
+      const formData = new FormData()
+      formData.append("username", username)
+      formData.append("email", email)
+      if (password) formData.append("password", password)
+      formData.append("profile_picture_file", pictureFile)
+
+      const response = await fetch(`${API_BASE}/users/${id}`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      })
+
+      const data = await response.json()
+      setIsSaving(false)
+
+      if (response.ok) {
+        localStorage.setItem("user", JSON.stringify(data))
+        navigate("/profile")
+      } else {
+        setError(data.error)
+      }
+      return
+    }
+
+    // si no hay foto nueva, mando JSON normal
     const body: Record<string, string> = { username, email }
     if (password) body.password = password
-    if (profilePicture) body.profile_picture = profilePicture
 
     const response = await apiFetch(`/users/${id}`, {
       method: "PUT",
@@ -47,31 +75,21 @@ async function loadUser() {
     })
 
     const data = await response.json()
+    setIsSaving(false)
 
     if (response.ok) {
-      // actualizo el localStorage con los nuevos datos
       localStorage.setItem("user", JSON.stringify(data))
-      navigate("/")
+      navigate("/profile")
     } else {
       setError(data.error)
     }
   }
 
   return (
-    <>
-      <nav className="navbar">
-        <a href="/" className="navbar-logo">WhereTheFit</a>
-        <div className="navbar-links">
-          <a href="#">Buscar</a>
-          <a href="#">Feed</a>
-          <a href="/create">Crear</a>
-          <a href="/profile">Perfil</a>
-        </div>
-      </nav>
-
+    <Layout>
       <div className="container">
         <div className="card">
-          <h2>Editar usuario</h2>
+          <h2>Editar perfil</h2>
 
           <form onSubmit={handleSubmit}>
             <input
@@ -94,22 +112,44 @@ async function loadUser() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-            <input
-              type="text"
-              placeholder="URL de foto de perfil (opcional)"
-              value={profilePicture}
-              onChange={(e) => setProfilePicture(e.target.value)}
-            />
+
+            {/* foto de perfil */}
+            <div style={{ marginBottom: "14px" }}>
+              <p style={{ fontSize: "13px", color: "#888", marginBottom: "6px" }}>Foto de perfil</p>
+
+              {/* preview de la foto actual o la nueva */}
+              {(pictureFile || currentPicture) && (
+                <div style={{ marginBottom: "8px" }}>
+                  <img
+                    src={pictureFile ? URL.createObjectURL(pictureFile) : currentPicture}
+                    alt="foto de perfil"
+                    style={{ width: "80px", height: "80px", borderRadius: "50%", objectFit: "cover", border: "2px solid #e0e0e0" }}
+                  />
+                </div>
+              )}
+
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (file) setPictureFile(file)
+                }}
+              />
+            </div>
+
             <div className="btn-row">
-              <button type="submit" className="btn">Guardar cambios</button>
-              <a href="/" className="btn btn-secondary">Cancelar</a>
+              <button type="submit" disabled={isSaving} className="btn">
+                {isSaving ? "Guardando..." : "Guardar cambios"}
+              </button>
+              <a href="/profile" className="btn btn-secondary">Cancelar</a>
             </div>
           </form>
 
           {error && <p className="error">{error}</p>}
         </div>
       </div>
-    </>
+    </Layout>
   )
 }
 

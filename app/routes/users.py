@@ -99,10 +99,24 @@ def update_user(user_id):
     if not user:
         return jsonify({"error": "Usuario no encontrado"}), 404
 
-    data = request.get_json()
+    # detecto si viene como FormData (con archivo) o JSON
+    if request.content_type and "multipart/form-data" in request.content_type:
+        data = request.form
+
+        # si viene una foto como archivo, la subo a S3
+        if "profile_picture_file" in request.files:
+            file = request.files["profile_picture_file"]
+            if file.filename != "":
+                from app.services.s3 import upload_image
+                url = upload_image(file)
+                user.profile_picture = url
+    else:
+        data = request.get_json()
+
+        if "profile_picture" in data:
+            user.profile_picture = data["profile_picture"]
 
     # actualizo solo los campos que vinieron en el body
-    # si no viene un campo, lo dejo como estaba
     if "username" in data:
         existing = User.query.filter_by(username=data["username"]).first()
         if existing and existing.id != user_id:
@@ -115,16 +129,12 @@ def update_user(user_id):
             return jsonify({"error": "El email ya esta registrado"}), 400
         user.email = data["email"]
 
-    if "password" in data:
-        # hasheo la nueva contraseña antes de guardarla
+    if "password" in data and data["password"]:
         user.set_password(data["password"])
-
-    if "profile_picture" in data:
-        user.profile_picture = data["profile_picture"]
 
     # activa o desactiva el envio del resumen diario por mail
     if "email_notifications" in data:
-        user.email_notifications = data["email_notifications"]
+        user.email_notifications = data["email_notifications"] in [True, "true", "True"]
 
     # guardo los cambios en la base de datos
     db.session.commit()
