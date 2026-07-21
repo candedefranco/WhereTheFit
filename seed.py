@@ -240,6 +240,7 @@ def seed():
                 email=u_data["email"],
                 profile_picture=u_data["profile_picture"],
                 email_verified=True,
+                email_notifications=False,
             )
             user.set_password("test1234")
             db.session.add(user)
