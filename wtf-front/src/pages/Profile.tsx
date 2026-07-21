@@ -179,10 +179,22 @@ function Profile() {
             <h2>Mi perfil</h2>
             <a href={`/edit/${currentUser.id}`} className="btn">Editar perfil</a>
           </div>
+
+          {/* foto de perfil */}
+          <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "12px" }}>
+            <img
+              src={currentUser.profile_picture || "/favicon.svg"}
+              alt={currentUser.username}
+              style={{ width: "72px", height: "72px", borderRadius: "50%", objectFit: "cover", border: "2px solid #e0e0e0" }}
+            />
+            <div>
+              <p style={{ margin: 0, fontSize: "18px", fontWeight: 600 }}>@{currentUser.username}</p>
+              <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#888" }}>Miembro desde {new Date(currentUser.created_at).toLocaleDateString("es-AR")}</p>
+            </div>
+          </div>
+
           <div className="profile-data">
-            <p><strong>Username:</strong> {currentUser.username}</p>
             <p><strong>Email:</strong> {currentUser.email}</p>
-            <p><strong>Miembro desde:</strong> {new Date(currentUser.created_at).toLocaleDateString("es-AR")}</p>
 
             {/* toggle de notificaciones por email */}
             <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "8px" }}>
