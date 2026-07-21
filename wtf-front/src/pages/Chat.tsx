@@ -61,9 +61,8 @@ function Chat() {
         setIsConnected(true)
       } else if (data.type === "new_message" && data.message) {
         setMessages((prev) => [...prev, data.message!])
-      } else if (data.type === "message_sent" && data.message) {
-        setMessages((prev) => [...prev, data.message!])
       }
+      // message_sent lo ignoramos: ya mostramos el mensaje con optimistic UI
     }
 
     socket.onclose = () => {
@@ -98,10 +97,23 @@ function Chat() {
   function sendMessage() {
     if (!newMessage.trim() || !selectedMutual || !ws) return
 
+    const text = newMessage.trim()
+
+    // optimistic UI: muestro el mensaje inmediatamente sin esperar al server
+    const optimisticMsg: ChatMessage = {
+      id: Date.now(), // id temporal
+      sender_id: currentUserId!,
+      receiver_id: selectedMutual.id,
+      text: text,
+      created_at: new Date().toISOString(),
+      sender_username: currentUser.username || "",
+    }
+    setMessages((prev) => [...prev, optimisticMsg])
+
     ws.send(JSON.stringify({
       type: "message",
       to: selectedMutual.id,
-      text: newMessage.trim(),
+      text: text,
     }))
 
     setNewMessage("")
